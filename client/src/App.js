@@ -4,12 +4,12 @@ import Mapbox from './Mapbox/Mapbox';
 import './styles.scss';
 
 const App = () => {
-    return (
-        <div>
-            Hello World!
-            <Mapbox />
-        </div>
-    );
+  return (
+    <div>
+      Hello World!
+      <Mapbox />
+    </div>
+  );
 };
 
 export default App;
