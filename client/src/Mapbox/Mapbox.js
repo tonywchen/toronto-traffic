@@ -1,44 +1,56 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MapboxGl from 'mapbox-gl';
 
+import MapMetadata from './MapMetadata';
+
 const DEFAULT = {
-  lng: 5,
-  lat: 34,
-  zoom: 2
+  lng: -122.486052,
+  lat: 37.830348,
+  zoom: 15
 };
 
-const Mapbox = () => {
-  const [lng, setLng] = useState(DEFAULT.lng);
-  const [lat, setLat] = useState(DEFAULT.lat);
-  const [zoom, setZoom] = useState(DEFAULT.zoom);
-
+const Mapbox = ({ children }) => {
+  const [map, setMap] = useState(null);
+  const [ready, setReady] = useState(false);
   const mapContainer = useRef(null);
 
   useEffect(() => {
-    const map = new MapboxGl.Map({
+    const mapInstance = new MapboxGl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/dark-v10',
-      center: [lng, lat],
-      zoom: zoom
+      center: [DEFAULT.lng, DEFAULT.lat],
+      zoom: DEFAULT.zoom
     });
+    setMap(mapInstance);
 
-    map.on('move', () => {
-      setLng(map.getCenter().lng.toFixed(4));
-      setLat(map.getCenter().lat.toFixed(4));
-      setZoom(map.getZoom().toFixed(2));
+    mapInstance.on('load', () => {
+      setReady(true);
     });
 
     return () => {
-      map.remove();
+      mapInstance.remove();
     };
   }, []);
 
+  const renderChildren = () => {
+    if (!ready) {
+      return null;
+    }
+
+    return React.Children.map(children, (child) => {
+      return React.cloneElement(child, { map: map })
+    });
+  };
+
   return (
     <div className="map">
-      <div className="map-container" ref={mapContainer}>  
+      <div className="map-container" ref={mapContainer}>
+        { renderChildren() }
       </div>
       <div className="map-detail">
-        {`Coordinates: (${lng}, ${lat}), Zoom: ${zoom}`}
+        { ready && (
+          <MapMetadata map={map}></MapMetadata>
+        )}
       </div>
     </div>
   );
