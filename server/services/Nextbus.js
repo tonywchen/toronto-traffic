@@ -58,8 +58,6 @@ const Nextbus = () => {
       const response = await axios.get(requestUrl);
       const jsonData = await xml2js.parseStringPromise(response.data);
 
-      console.log(`Request: ${requestUrl} - ${response.headers['request-duration']}`);
-
       return jsonData.body;
     } catch (e) {
       throw e;
@@ -77,7 +75,12 @@ const Nextbus = () => {
       params: params
     });
 
-    const stops = result.route[0].stop.map(s => s.$);
+    const stops = result.route[0].stop.map((s) => {
+      return {
+        ...s.$,
+        routeTag: route
+      };
+    });
 
     const directions = result.route[0].direction.map((d) => {
       const directionStops = d.stop.map(s => s.$);
