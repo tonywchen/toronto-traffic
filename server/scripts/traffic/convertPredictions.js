@@ -270,8 +270,6 @@ const matchTrafficToDirections = (traffic, subrouteData) => {
         trip.lastStopTag = lastStop.tag;
       }
     });
-
-    console.log(traffic[stopTag]);
   });
 };
 

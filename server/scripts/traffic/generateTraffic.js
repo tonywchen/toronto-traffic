@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const Agenda = require('Agenda');
 
 const convertPredictions = require('./convertPredictions');
+const computePathData = require('./computePathData');
 
 let agenda;
 const initialize = async () => {
@@ -21,8 +22,9 @@ const initialize = async () => {
     console.error(`Job failed with error: ${err.stack}`);
   });
 
-  agenda.define('GENERATE_TRAFFIC', () => {
-    convertPredictions('504');
+  agenda.define('GENERATE_TRAFFIC', async () => {
+    const traffic = await convertPredictions('504');
+    await computePathData(traffic)
   });
 };
 

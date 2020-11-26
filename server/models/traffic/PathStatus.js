@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Path = require('./Path').schema;
 
 /**
  * PathStatus
