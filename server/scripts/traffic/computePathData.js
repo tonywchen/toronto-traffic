@@ -139,7 +139,15 @@ const savePathStatuses = async (paths) => {
     const { pathStatus, obj } = path;
     pathStatus.path = obj;
 
-    await PathStatus.create(pathStatus);
+    await PathStatus.findOneAndUpdate({
+      path: pathStatus.path,
+      timestamp: pathStatus.timestamp,
+    }, {
+      ...pathStatus
+    }, {
+      new: true,
+      upsert: true
+    });
   }
 };
 
