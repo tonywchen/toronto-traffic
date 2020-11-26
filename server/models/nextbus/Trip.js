@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const SimplePredictionSchema = require('./SimplePrediction').schema;
+const Schema = mongoose.Schema;
+
+// const SimplePredictionSchema = require('./SimplePrediction').schema;
 /**
  * Trip
  *
@@ -23,10 +25,11 @@ const Trip = mongoose.model('Trip', {
   routeTitle: String,
   dirTag: String,
   branch: String,
-  predictions: {
+  /* predictions: {
     type: Map,
     of: SimplePredictionSchema
-  }
+  } */
+  predictions: Schema.Types.Mixed
 });
 
 module.exports = Trip;

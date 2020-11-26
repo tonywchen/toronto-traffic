@@ -1,3 +1,8 @@
+/**
+ * This is the main job that periodically fetches transit
+ * route/stops/directions/predictions data from Nextbus
+ * API.
+ */
 const mongoose = require('mongoose');
 const Agenda = require('Agenda');
 

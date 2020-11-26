@@ -17,10 +17,12 @@ const PathStatus = mongoose.model('PathStatus', {
   },
   timestamp: Number,
   score: Number,
+  weight: Number,
   segments: [{ // An array representing the busy-ness of the traffic along the path. Earlier version would contain only 1 status in the array, but will add more statuses to add more granularity.
     from: Number,
     to: Number,
-    score: Number // A score indicating how busy the route is compared to normal. The larger the score the busier it is. The score can be also be negative, indicating that it is less busy than usual.
+    score: Number, // A score indicating how busy the route is compared to normal. The larger the score the busier it is. The score can be also be negative, indicating that it is less busy than usual.
+    weight: Number // A value indicating signifance of the score. Potential factor include more observations
   }]
 });
 
