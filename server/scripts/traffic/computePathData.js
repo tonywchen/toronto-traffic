@@ -1,111 +1,142 @@
-/*
-[{
-  stopTag: '23885',
-  trips: {
-    '40919442': {
-      diff: 42,
-      count: 1,
-      directions: [Object],
-      hasMultipleDirections: false,
-      lastStopTag: '23887'
-    }
-  }
-}]
-*/
+const {performance} = require('perf_hooks');
 
 const Stop = require('../../models/nextbus/Stop');
 const Path = require('../../models/traffic/Path');
 const PathStatus = require('../../models/traffic/PathStatus');
 
-const MBX_ACCESS_TOKEN = '';
+const MBX_ACCESS_TOKEN = 'pk.eyJ1IjoidG9ueXdjaGVuIiwiYSI6ImNraHBlODYwZDBjcTMyem54YWw5bm8yajAifQ.3j0gYt0zWIa_5rXk63grLQ';
 const mbxClient = require('@mapbox/mapbox-sdk');
 const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
 const baseClient = mbxClient({ accessToken: MBX_ACCESS_TOKEN });
 const directionsService = mbxDirections(baseClient);
 
-const trafficToPathData = (traffic) => {
-  const pathMap = {};
-  const stopMap = {};
+const mapObject = (obj, mapFn) => {
+  const newObj = {};
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    newObj[key] = mapFn(value);
+  });
 
-  Object.keys(traffic).forEach((stopTag) => {
-    const trips = traffic[stopTag].trips;
-    Object.keys(trips).forEach((tripTag) => {
-      if (!trips) {
-        return;
-      }
+  return newObj;
+};
 
-      const trip = trips[tripTag];
-      const {lastStopTag, timestamp, diff, count} = trip;
+const Compute = (debug = false) => {
 
-      if (lastStopTag) {
-        const pathStatus = {
-          timestamp,
-          score: diff,
-          weight: count,
-          segments: [{
-            from: 0,
-            to: 1,
+  const trafficToPathData = async (traffic) => {
+    const pathMap = {};
+    const stopMap = {};
+
+    Object.keys(traffic).forEach((stopTag) => {
+      const trips = traffic[stopTag].trips;
+      Object.keys(trips).forEach((tripTag) => {
+        if (!trips) {
+          return;
+        }
+
+        const trip = trips[tripTag];
+        const {lastStopTag, timestamp, interval, diff, count} = trip;
+
+        if (lastStopTag) {
+          const pathStatus = {
+            timestamp,
+            interval,
             score: diff,
-            weight: count
-          }]
-        };
+            weight: count,
+            segments: [{
+              from: 0,
+              to: 1,
+              score: diff,
+              weight: count
+            }]
+          };
 
-        const path = {
-          from: stopTag,
-          to: lastStopTag,
-          pathStatus: pathStatus
-        };
-        const pathIdentifier = `${stopTag}---${lastStopTag}`;
+          const path = {
+            from: stopTag,
+            to: lastStopTag,
+            pathStatus: pathStatus
+          };
+          const pathIdentifier = `${stopTag}---${lastStopTag}`;
 
-        pathMap[pathIdentifier] = path;
+          pathMap[pathIdentifier] = path;
 
-        stopMap[stopTag] = 1;
-        stopMap[lastStopTag] = 1;
-      }
+          stopMap[stopTag] = 1;
+          stopMap[lastStopTag] = 1;
+        }
+      });
     });
-  });
 
-  return {
-    paths: Object.values(pathMap),
-    stopTags: Object.keys(stopMap)
+    return {
+      paths: Object.values(pathMap),
+      stopTags: Object.keys(stopMap)
+    };
   };
-};
 
-// TODO: add a fetch function in case
-// no stop data exists for a tag
-const findStopData = async (stopTags) => {
-  const stopData = {};
-  for (const stopTag of stopTags) {
-    stopData[stopTag] = null;
-  }
+  // TODO: add a fetch function in case
+  // no stop data exists for a tag
+  const findStopData = async (stopTags) => {
+    const stopData = {};
+    for (const stopTag of stopTags) {
+      stopData[stopTag] = null;
+    }
 
-  const documents = await Stop.find({
-    tag: {'$in': stopTags}
-  });
-
-  for (const document of documents) {
-    const stopTag = document.get('tag');
-    stopData[stopTag] = document.toObject();
-  }
-
-  return stopData;
-};
-
-const findOrFetchPath = async (paths, stopData) => {
-  for (const path of paths) {
-    const fromStopData = stopData[path.from];
-    const toStopData = stopData[path.to];
-
-    const pathObj = await Path.findOne({
-      from: path.from,
-      to: path.to
+    const documents = await Stop.find({
+      tag: {'$in': stopTags}
     });
 
-    if (pathObj) {
-      path.legs = pathObj.legs;
-      path.obj = pathObj;
-      continue;
+    for (const document of documents) {
+      const stopTag = document.get('tag');
+      stopData[stopTag] = document.toObject();
     }
+
+    return stopData;
+  };
+
+  const preparePathData = async (allPaths) => {
+    const pathData = {};
+    for (const paths of allPaths) {
+      for (const path of paths) {
+        const {from, to} = path;
+        const identifier = `${from}-${to}`;
+        pathData[identifier] = pathData[identifier] || {
+          from,
+          to,
+          paths: []
+        };
+        pathData[identifier].paths.push(path)
+      }
+    }
+
+    return pathData;
+  }
+
+  const findOrPopulatePaths = async (pathData, stopData) => {
+    for (const pathDatum of Object.values(pathData)) {
+      const isPathDatumFound = await findPathDatum(pathDatum);
+
+      if (!isPathDatumFound) {
+        await populatePathDatum(pathDatum, stopData);
+      }
+    }
+  }
+
+  const findPathDatum = async (pathDatum) => {
+    const pathDatumObj = await Path.findOne({
+      from: pathDatum.from,
+      to: pathDatum.to
+    });
+
+    if (pathDatumObj) {
+      pathDatum.legs = pathDatumObj.legs;
+      pathDatum.obj = pathDatumObj;
+
+      return true;
+    }
+
+    return false;
+  };
+  const populatePathDatum = async (pathDatum, stopData) => {
+    const fromStopData = stopData[pathDatum.from];
+    const toStopData = stopData[pathDatum.to];
 
     const response = await directionsService.getDirections({
       profile: 'driving-traffic',
@@ -120,8 +151,8 @@ const findOrFetchPath = async (paths, stopData) => {
 
     const legs = response.body.routes[0].geometry.coordinates;
     const updatedPathObj = await Path.findOneAndUpdate({
-      from: path.from,
-      to: path.to
+      from: pathDatum.from,
+      to: pathDatum.to
     }, {
       legs: legs
     }, {
@@ -129,33 +160,82 @@ const findOrFetchPath = async (paths, stopData) => {
       upsert: true
     });
 
-    path.legs = legs;
-    path.obj = updatedPathObj;
-  }
+    for (const path of pathDatum.paths) {
+      path.legs = legs;
+      path.obj = updatedPathObj;
+    }
+  };
+
+  const savePathStatuses = async (pathData) => {
+    for (const {paths, obj} of Object.values(pathData)) {
+      for (const path of paths) {
+        const { pathStatus } = path;
+
+        await PathStatus.findOneAndUpdate({
+          path: obj,
+          timestamp: pathStatus.timestamp,
+          interval: pathStatus.interval
+        }, {
+          ...pathStatus
+        }, {
+          new: true,
+          upsert: true
+        });
+      }
+    }
+  };
+
+  const _benchmark = (fn) => {
+    // TODO: research if there is a way to make this work with
+    // both synchronous/asynchronous functions
+    return async (...args) => {
+      if (!debug) {
+        return await fn(...params);
+      }
+
+      const before = performance.now();
+      const result = await fn(...args);
+      const after = performance.now();
+      const duration = after - before;
+
+      console.log(`[${fn.name}] ${duration}ms`);
+
+      return result;
+    }
+  };
+
+  const publicFn = {
+    trafficToPathData,
+    findStopData,
+    preparePathData,
+    findOrPopulatePaths,
+    savePathStatuses
+  };
+
+  return mapObject(publicFn, _benchmark)
 };
 
-const savePathStatuses = async (paths) => {
-  for (const path of paths) {
-    const { pathStatus, obj } = path;
-    pathStatus.path = obj;
+const computePathData = async (trafficGroups, debug = false) => {
+  const compute = Compute(debug);
 
-    await PathStatus.findOneAndUpdate({
-      path: pathStatus.path,
-      timestamp: pathStatus.timestamp,
-    }, {
-      ...pathStatus
-    }, {
-      new: true,
-      upsert: true
-    });
+  const allPaths = [];
+  const stopTagMap = {};
+
+  for (const traffic of trafficGroups) {
+    const {paths, stopTags} = await compute.trafficToPathData(traffic);
+
+    allPaths.push(paths);
+    for (const stopTag of stopTags) {
+      stopTagMap[stopTag] = true;
+    }
   }
-};
 
-const computePathData = async (traffic) => {
-  const pathData = trafficToPathData(traffic);
-  const stopData = await findStopData(pathData.stopTags);
-  await findOrFetchPath(pathData.paths, stopData);
-  await savePathStatuses(pathData.paths);
+  const stopTags = Object.keys(stopTagMap);
+
+  const stopData = await compute.findStopData(stopTags);
+  const pathData = await compute.preparePathData(allPaths);
+  await compute.findOrPopulatePaths(pathData, stopData);
+  await compute.savePathStatuses(pathData);
 };
 
 module.exports = computePathData;

@@ -17,6 +17,7 @@ const PathStatus = mongoose.model('PathStatus', {
     type: Path
   },
   timestamp: Number,
+  interval: Number,
   score: Number,
   weight: Number,
   segments: [{ // An array representing the busy-ness of the traffic along the path. Earlier version would contain only 1 status in the array, but will add more statuses to add more granularity.
