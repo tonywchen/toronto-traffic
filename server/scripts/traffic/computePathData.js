@@ -5,10 +5,11 @@ const Stop = require('../../models/nextbus/Stop');
 const Path = require('../../models/traffic/Path');
 const PathStatus = require('../../models/traffic/PathStatus');
 
-const MBX_ACCESS_TOKEN = 'pk.eyJ1IjoidG9ueXdjaGVuIiwiYSI6ImNraHBlODYwZDBjcTMyem54YWw5bm8yajAifQ.3j0gYt0zWIa_5rXk63grLQ';
 const mbxClient = require('@mapbox/mapbox-sdk');
 const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
-const baseClient = mbxClient({ accessToken: MBX_ACCESS_TOKEN });
+
+const tokens = require('../configs/tokens.json');
+const baseClient = mbxClient({ accessToken: tokens.mapbox });
 const directionsService = mbxDirections(baseClient);
 
 const mapObject = (obj, mapFn) => {
