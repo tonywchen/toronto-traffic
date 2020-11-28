@@ -1,39 +1,48 @@
 const { MongoClient } = require('mongodb');
-const mongoose = require('mongoose');
 
-const Nextbus = require('../../services/Nextbus');
 const Trip = require('../../models/nextbus/Trip');
 const Subroute = require('../../models/nextbus/Subroute');
-
-const uri = 'mongodb://localhost:27017/toronto-traffic';
-
-const client = new MongoClient(uri);
-const nextbusService = Nextbus();
+const SystemSetting = require('../../models/SystemSetting');
 
 const dirTagRegex = new RegExp('[0-9]{1,3}_[0-1]_');
 const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes
 
-const findRecentTrips = async (routeTag) => {
-  const mostRecentEntry = await Trip.findOne({})
-    .select('timestamp')
-    .sort({timestamp: -1});
-  const mostRecentTimestamp = mostRecentEntry.get('timestamp');
-
-  const query = {
-    'routeTag': routeTag,
-    'timestamp': {
-      '$gte': mostRecentTimestamp - DEFAULT_TIME_RANGE,
-      '$lte': mostRecentTimestamp
+const findRecentTripIntervals = async (lastProcessed, routeTag) => {
+  const pipeline = [{
+    '$match': {
+      'timestamp': { '$gt': lastProcessed },
+      'routeTag': routeTag
     }
-  };
+  }, {
+    '$group': {
+      '_id': {
+        'interval': {
+          '$subtract': ['$timestamp', {
+            '$mod': [
+              '$timestamp',
+              DEFAULT_TIME_RANGE
+            ]
+          }]
+        }
+      },
+      'trips': {
+        '$push': '$$ROOT'
+      }
+    }
+  }, {
+    '$project': {
+      'interval': '$_id.interval',
+      'trips': '$trips'
+    }
+  }];
 
-  const trips = [];
-  const documents = await Trip.find(query);
-  await documents.forEach((document) => {
-    trips.push(document.toObject());
+  const tripIntervals = [];
+  const cursor = await Trip.aggregate(pipeline);
+  await cursor.forEach((result) => {
+    tripIntervals.push(result);
   });
 
-  return trips;
+  return tripIntervals;
 };
 
 /**
@@ -43,10 +52,10 @@ const findRecentTrips = async (routeTag) => {
  * @param {*} trips  the trip groups to be converted into a flat list
  * of predictions
  */
-const flattenTripsToPredictions = (trips) => {
+const flattenTripsToPredictions = (trips, interval) => {
   const allPredictions = [];
   trips.forEach((trip) => {
-    const predictions = tripToPredictions(trip);
+    const predictions = tripToPredictions(trip, interval);
     allPredictions.push(...predictions);
   });
 
@@ -58,7 +67,7 @@ const flattenTripsToPredictions = (trips) => {
  * populated with original route/direction/branch/trip attributes
  * @param {*} trip
  */
-const tripToPredictions = (trip) => {
+const tripToPredictions = (trip, interval) => {
   const { tripTag, routeTag, routeTitle, dirTag, branch, timestamp } = trip;
   const predictions = Object.keys(trip.predictions).map((key) => {
     const prediction = trip.predictions[key];
@@ -70,7 +79,8 @@ const tripToPredictions = (trip) => {
       routeTitle,
       dirTag,
       branch,
-      timestamp
+      timestamp,
+      interval
     };
   });
 
@@ -167,6 +177,7 @@ const computeTrafficByStop = (stops, tripLocations) => {
             diff: 0,
             count: 0,
             timestamp: prediction.timestamp,
+            interval: prediction.interval,
             directions: {}  // theoretically only trip-direction is a 1-to-1 mapping, but setting this to array to observe all possible values
           };
 
@@ -324,18 +335,24 @@ const convertPredictions = async (routeTag) => {
     return;
   }
 
-  const trips = await findRecentTrips(routeTag);
+  const lastProcessed = await SystemSetting.findLastProcessed();
+  const tripIntervals = await findRecentTripIntervals(lastProcessed, routeTag);
 
-  const predictions = flattenTripsToPredictions(trips);
-  const predictionsByStop = groupPredictionsByStops(predictions);
-  const currentTripLocations = getCurrentTripLocations(predictions);
+  const trafficGroups = [];
+  for (const { interval, trips } of tripIntervals) {
+    const predictions = flattenTripsToPredictions(trips, interval);
+    const predictionsByStop = groupPredictionsByStops(predictions);
+    const currentTripLocations = getCurrentTripLocations(predictions);
 
-  const traffic = computeTrafficByStop(predictionsByStop, currentTripLocations);
-  const subroutes = await findSubroutes();
+    const traffic = computeTrafficByStop(predictionsByStop, currentTripLocations);
+    const subroutes = await findSubroutes();
 
-  matchTrafficToDirections(traffic, subroutes);
+    matchTrafficToDirections(traffic, subroutes);
 
-  return traffic;
+    trafficGroups.push(traffic);
+  }
+
+  return trafficGroups;
 }
 
 module.exports = convertPredictions;
