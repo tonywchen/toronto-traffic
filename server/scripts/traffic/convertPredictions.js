@@ -1,4 +1,5 @@
 const { MongoClient } = require('mongodb');
+const { performance } = require('perf_hooks');
 
 const Trip = require('../../models/nextbus/Trip');
 const Subroute = require('../../models/nextbus/Subroute');
@@ -7,10 +8,25 @@ const SystemSetting = require('../../models/SystemSetting');
 const dirTagRegex = new RegExp('[0-9]{1,3}_[0-1]_');
 const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes
 
-const findRecentTripIntervals = async (lastProcessed, routeTag) => {
+const findRecentCompleteTimestamp = async () => {
+  const result = await Trip.findOne().sort('-timestamp');
+
+  if (result) {
+    const { timestamp } = result;
+    const roundedTimestamp = timestamp - timestamp % DEFAULT_TIME_RANGE;
+    return roundedTimestamp;
+  }
+
+  return 0;
+};
+
+const findRecentTripIntervals = async (lastProcessed, maxTimestamp, routeTag) => {
   const pipeline = [{
     '$match': {
-      'timestamp': { '$gt': lastProcessed },
+      'timestamp': {
+        '$gte': lastProcessed,
+        '$lt': maxTimestamp
+      },
       'routeTag': routeTag
     }
   }, {
@@ -27,12 +43,16 @@ const findRecentTripIntervals = async (lastProcessed, routeTag) => {
       },
       'trips': {
         '$push': '$$ROOT'
+      },
+      'lastTimestamp': {
+        '$max': '$timestamp'
       }
     }
   }, {
     '$project': {
       'interval': '$_id.interval',
-      'trips': '$trips'
+      'trips': '$trips',
+      'lastTimestamp': '$lastTimestamp'
     }
   }];
 
@@ -330,13 +350,22 @@ const findLastStop = (dirTag, stopTag, subrouteData) => {
   }
 };
 
+const findMostRecentTripTimestamp = (tripIntervals) => {
+  let mostRecent = 0;
+  for (const {lastTimestamp} of tripIntervals) {
+    mostRecent = Math.max(mostRecent, lastTimestamp);
+  }
+
+  return mostRecent;
+}
+
 const convertPredictions = async (routeTag) => {
   if (!routeTag) {
     return;
   }
-
   const lastProcessed = await SystemSetting.findLastProcessed();
-  const tripIntervals = await findRecentTripIntervals(lastProcessed, routeTag);
+  const maxTimestamp = await findRecentCompleteTimestamp();
+  const tripIntervals = await findRecentTripIntervals(lastProcessed, maxTimestamp, routeTag);
 
   const trafficGroups = [];
   for (const { interval, trips } of tripIntervals) {
@@ -352,7 +381,10 @@ const convertPredictions = async (routeTag) => {
     trafficGroups.push(traffic);
   }
 
-  return trafficGroups;
+  return {
+    trafficGroups,
+    maxTimestamp
+  };
 }
 
 module.exports = convertPredictions;

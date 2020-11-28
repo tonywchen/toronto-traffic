@@ -4,7 +4,7 @@
  * API.
  */
 const mongoose = require('mongoose');
-const Agenda = require('Agenda');
+const Agenda = require('agenda');
 
 const convertPredictions = require('./convertPredictions');
 const computePathData = require('./computePathData');
@@ -29,8 +29,8 @@ const initialize = async () => {
   });
 
   agenda.define(JOB_PROCESS_NEXTBUS_DATA, async () => {
-    const trafficGroups = await convertPredictions('504');
-    await computePathData(trafficGroups)
+    const { trafficGroups, maxTimestamp } = await convertPredictions('504');
+    await computePathData(trafficGroups, maxTimestamp);
   });
 };
 

@@ -9,6 +9,7 @@ const mbxClient = require('@mapbox/mapbox-sdk');
 const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
 
 const tokens = require('../configs/tokens.json');
+const SystemSetting = require('../../models/SystemSetting');
 const baseClient = mbxClient({ accessToken: tokens.mapbox });
 const directionsService = mbxDirections(baseClient);
 
@@ -226,7 +227,7 @@ const Compute = (debug = false) => {
   return mapObject(publicFn, _benchmark)
 };
 
-const computePathData = async (trafficGroups, debug = false) => {
+const computePathData = async (trafficGroups, maxTimestamp, debug = false) => {
   const compute = Compute(debug);
 
   const allPaths = [];
@@ -247,6 +248,8 @@ const computePathData = async (trafficGroups, debug = false) => {
   const pathData = await compute.preparePathData(allPaths);
   await compute.findOrPopulatePaths(pathData, stopData);
   await compute.savePathStatuses(pathData);
+
+  await SystemSetting.setLastProcessed(maxTimestamp);
 };
 
 module.exports = computePathData;

@@ -32,7 +32,6 @@ SystemSettingSchema.statics.setLastProcessed = async function (lastProcessed) {
   });
 };
 
-
 const SystemSetting = mongoose.model('SystemSetting', SystemSettingSchema);
 
 module.exports = SystemSetting;
