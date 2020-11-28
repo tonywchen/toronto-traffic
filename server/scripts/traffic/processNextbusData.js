@@ -36,7 +36,7 @@ const initialize = async () => {
 
 const run = async () => {
   await agenda.start();
-  await agenda.now(JOB_PROCESS_NEXTBUS_DATA);
+  await agenda.every('10 minutes', JOB_PROCESS_NEXTBUS_DATA);
 }
 
 (async () => {
