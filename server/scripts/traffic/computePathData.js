@@ -173,10 +173,8 @@ const Compute = (debug = false) => {
       upsert: true
     });
 
-    for (const path of pathDatum.paths) {
-      path.legs = legs;
-      path.obj = updatedPathObj;
-    }
+    pathDatum.legs = legs;
+    pathDatum.obj = updatedPathObj;
   };
 
   const savePathStatuses = async (pathData) => {
