@@ -8,6 +8,7 @@ const Agenda = require('Agenda');
 
 const fetchRoute = require('./fetchRoute');
 const fetchTrips = require('./fetchTrips');
+
 const jobs = [{
   name: fetchRoute.name,
   fetch: fetchRoute.fetch,

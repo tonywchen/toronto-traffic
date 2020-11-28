@@ -38,17 +38,3 @@ module.exports = {
   name: 'JOB_TRIPS',
   fetch: fetchTrips
 };
-
-/**
- * size: 10119450
- * count: 3513
- * storageSize: 3153920
- * avgObjSize: 2880
- */
-3203072 - 3153920
-/**
- * size: 10279807
- * count: 3602,
- * storageSize: 3203072,
- * avgObjSize: 2853
- */
