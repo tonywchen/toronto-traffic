@@ -1,4 +1,5 @@
 const {performance} = require('perf_hooks');
+const moment = require('moment-timezone');
 
 const Stop = require('../../models/nextbus/Stop');
 const Path = require('../../models/traffic/Path');
@@ -36,10 +37,21 @@ const Compute = (debug = false) => {
         const trip = trips[tripTag];
         const {lastStopTag, timestamp, interval, diff, count} = trip;
 
+        const localMoment = moment(timestamp).tz('America/Toronto');
+        const localDateTime = {
+          year: localMoment.year(),
+          month: localMoment.month() + 1, // moment.month is 0-based
+          date: localMoment.date(),
+          day: localMoment.day(),
+          hour: localMoment.hour(),
+          minute: localMoment.minute()
+        };
+
         if (lastStopTag) {
           const pathStatus = {
             timestamp,
             interval,
+            localDateTime,
             score: diff,
             weight: count,
             segments: [{
@@ -190,7 +202,7 @@ const Compute = (debug = false) => {
     // both synchronous/asynchronous functions
     return async (...args) => {
       if (!debug) {
-        return await fn(...params);
+        return await fn(...args);
       }
 
       const before = performance.now();
