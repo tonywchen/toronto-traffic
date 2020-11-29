@@ -11,9 +11,11 @@ const SystemSettingSchema = new Schema({
 });
 
 SystemSettingSchema.statics.findLastProcessed = async function () {
-  const lastProcessedEntry = this.findOne({
+  const lastProcessedEntry = await this.findOne({
     key: ATTRIBUTES.LAST_PROCESSED
   });
+
+  console.log(lastProcessedEntry.get('value'));
 
   return (lastProcessedEntry && lastProcessedEntry.value)
     ? lastProcessedEntry.value
