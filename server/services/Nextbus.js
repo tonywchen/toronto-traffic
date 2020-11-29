@@ -22,10 +22,6 @@ const baseUrl = 'http://webservices.nextbus.com/service/publicXMLFeed?';
 const Nextbus = () => {
   this.agency = 'ttc';
 
-  const _getCurrentTimestamp = () => {
-    return new Date().getTime();
-  };
-
   const _buildQueryString = ({ command, params = {} }) => {
     const paramStringList = Object.keys(params).map((key) => {
       const value = params[key];
@@ -48,6 +44,10 @@ const Nextbus = () => {
     paramStringList.unshift(`command=${command}`);
 
     return paramStringList.join('&');
+  };
+
+  this.getCurrentTimestamp = () => {
+    return new Date().getTime();
   };
 
   this.fetch = async ({ command, params = {} }) => {
@@ -96,12 +96,10 @@ const Nextbus = () => {
     };
   };
 
-  this.fetchPredictions = async (route, directionTag, stops) => {
+  this.fetchPredictions = async (route, directionTag, stops, currentTimestamp) => {
     if (!stops) {
       return null;
     };
-
-    const currentTimestamp = _getCurrentTimestamp();
 
     const compoundStops = stops.map((stop) => {
       return `${route}|${directionTag}|${stop.tag}`;
@@ -154,89 +152,23 @@ const Nextbus = () => {
         seconds: prediction.seconds,
         stopTag: prediction.stopTag,
         stopTitle: prediction.stopTitle,
-        isDeparture: prediction.isDeparture
+        isDeparture: prediction.isDeparture,
+        vehicle: prediction.vehicle
       };
 
       return acc;
     }, {});
 
-    /* const tripMap = {};
-    result.predictions.forEach((stop) => {
-      if (!stop.direction) {
-        return;
-      }
-
-      stop.direction.forEach((direction) => {
-        direction.prediction.forEach((prediction) => {
-          const vehicle = prediction.$.vehicle;
-          const tripTag = prediction.$.tripTag;
-          const identifier = `${vehicle}-${tripTag}`;
-
-          const stopPrediction = {
-            ...prediction.$,
-            routeTag: stop.$.routeTag,
-            routeTitle: stop.$.routeTitle,
-            stopTag: stop.$.stopTag,
-            stopTitle: stop.$.stopTitle,
-            createdAt: currentTimestamp
-          };
-
-          tripMap[identifier] = tripMap[identifier] || [];
-          tripMap[identifier].push(stopPrediction);
-        });
-      });
-    });
-
-    const tripMap2 = {};
-    result.predictions.forEach((stop) => {
-      if (!stop.direction) {
-        return;
-      }
-
-      stop.direction.forEach((direction) => {
-        direction.prediction.forEach((prediction) => {
-          const tripTag = prediction.$.tripTag;
-          const directionTag = prediction.$.dirTag;
-          const stopTag = stop.$.stopTag;
-
-          tripMap2[tripTag] = tripMap2[tripTag] || {
-            tripTag: tripTag,
-            directionMap: {}
-          };
-          tripMap2[tripTag].directionMap[directionTag] = tripMap2[tripTag].directionMap[directionTag] || {
-            directionTag: directionTag,
-            stopMap: {}
-          };
-          tripMap2[tripTag].directionMap[directionTag].stopMap[stopTag] = {
-            tripTag: tripTag,
-            directionTag: directionTag,
-            stopTag: stopTag,
-            routeTag: stop.$.routeTag,
-            routeTitle: stop.$.routeTitle,
-            timestamp: currentTimestamp,
-            seconds: prediction.$.seconds,
-            isDeparture: prediction.$.isDeparture,
-            vehicle: prediction.$.vehicle,
-            block: prediction.$.block
-          }
-        });
-      });
-    }); */
-
     return {
       predictions: allStopPredictions,
-      // tripMap: tripMap,
-      // tripMap2: tripMap2,
       groups: groupedPredictions
     };
   };
 
-  this.fetchVehicleLocation = async (route, timestamp) => {
-    timestamp = timestamp || (new Date().getTime() - 60 * 1000);
+  this.fetchVehicles = async (route) => {
     const params = {
       a: this.agency,
-      r: route,
-      t: timestamp
+      r: route
     };
 
     const result = await this.fetch({
@@ -244,12 +176,8 @@ const Nextbus = () => {
       params: params
     });
 
-    const lastTime = result.lastTime[0].$.time;
     const vehicles = result.vehicle.map((v) => {
-      return {
-        ...v.$,
-        lastTime
-      };
+      return v.$;
     });
 
     return vehicles;
