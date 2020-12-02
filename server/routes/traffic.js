@@ -1,14 +1,13 @@
 const router = require('express').Router();
 
+const TrafficService = require('../services/Traffic');
+const TrafficServiceInstance = new TrafficService();
+
 router.get('/traffic', async (req, res) => {
-  const { from, to } = req.query;
+  // by default, grab the most recent hourly traffic
+  const traffic = await TrafficServiceInstance.findRecent();
 
-  if (from && to) {
-    // get historical data
-  } else {
-    // get most recent data
-  }
-
-  res.send([]);
+  res.send(traffic);
 });
+
 module.exports = router;
