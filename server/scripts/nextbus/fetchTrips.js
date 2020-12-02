@@ -1,9 +1,9 @@
-const Nextbus = require('../../services/Nextbus');
+const NextbusService = require('../../services/Nextbus');
 const Trip = require('../../models/nextbus/Trip');
 const Stop = require('../../models/nextbus/Stop');
 const Vehicle = require('../../models/nextbus/Vehicle');
 
-const nextbusService = Nextbus();
+const nextbusService = NextbusService();
 
 const findRouteStops = async (routeTag) => {
   const stops = await Stop.find({

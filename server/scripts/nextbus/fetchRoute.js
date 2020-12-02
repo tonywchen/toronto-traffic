@@ -1,8 +1,8 @@
-const Nextbus = require('../../services/Nextbus');
+const NextbusService = require('../../services/Nextbus');
 const Stop = require('../../models/nextbus/Stop');
 const Subroute = require('../../models/nextbus/Subroute');
 
-const nextbusService = Nextbus();
+const nextbusService = NextbusService();
 
 const fetchRoute = async (job) => {
   const { routeTag } = job.attrs.data;
