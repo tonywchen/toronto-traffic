@@ -20,6 +20,7 @@ const findRecentCompleteTimestamp = async () => {
   return 0;
 };
 
+// TODO: find a way to avoid/reduce `allowDiskUse`
 const findRecentTripIntervals = async (lastProcessed, maxTimestamp, routeTag) => {
   const pipeline = [{
     '$match': {
@@ -57,7 +58,7 @@ const findRecentTripIntervals = async (lastProcessed, maxTimestamp, routeTag) =>
   }];
 
   const tripIntervals = [];
-  const cursor = await Trip.aggregate(pipeline);
+  const cursor = await Trip.aggregate(pipeline).allowDiskUse(true);
   await cursor.forEach((result) => {
     tripIntervals.push(result);
   });
