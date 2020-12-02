@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import MapboxGl from 'mapbox-gl';
 
 import MapMetadata from './MapMetadata';
+import MapContext from '../common/MapContext';
 
 const DEFAULT = {
-  lng: -122.486052,
-  lat: 37.830348,
-  zoom: 15
+  lng: -79.3617,
+  lat: 43.6560,
+  zoom: 12.05
 };
 
 const Mapbox = ({ children }) => {
@@ -43,16 +44,18 @@ const Mapbox = ({ children }) => {
   };
 
   return (
-    <div className="map">
-      <div className="map-container" ref={mapContainer}>
-        { renderChildren() }
+    <MapContext.Provider value={map}>
+      <div className="map">
+        <div className="map-container" ref={mapContainer}>
+          { renderChildren() }
+        </div>
+        <div className="map-detail">
+          { ready && (
+            <MapMetadata></MapMetadata>
+          )}
+        </div>
       </div>
-      <div className="map-detail">
-        { ready && (
-          <MapMetadata map={map}></MapMetadata>
-        )}
-      </div>
-    </div>
+    </MapContext.Provider>
   );
 };
 
