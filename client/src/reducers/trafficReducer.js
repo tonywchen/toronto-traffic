@@ -1,4 +1,4 @@
-import { FETCH_TRAFFIC } from '../actions/types';
+import { FETCH_TRAFFIC, SELECT_TRAFFIC, SELECT_NEXT_TRAFFIC } from '../actions/types';
 
 const initialState = {
   trafficList: [],
@@ -15,7 +15,22 @@ export default (state = initialState, action) => {
       state.trafficList.length = 0;
       state.trafficList.push(...action.payload);
       return state;
+    case SELECT_TRAFFIC:
+      console.log(`SELECT_TRAFFIC: ${action.payload}`);
+      state.selectedTrafficIndex = action.payload;
+      return state;
+    case SELECT_NEXT_TRAFFIC:
+      if (state.trafficList.length === 0) {
+        return state;
+      }
+
+      if (state.selectedTrafficIndex === null) {
+        state.selectedTrafficIndex = 0;
+      } else {
+        state.selectedTrafficIndex = (state.selectedTrafficIndex + 1) % state.trafficList.length;
+      }
+      return state;
     default:
-      return traffic;
+      return state;
   }
 };

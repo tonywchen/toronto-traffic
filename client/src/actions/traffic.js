@@ -1,4 +1,4 @@
-import { FETCH_TRAFFIC } from './types';
+import { FETCH_TRAFFIC, SELECT_TRAFFIC, SELECT_NEXT_TRAFFIC } from './types';
 import resource from '../resources/traffic';
 
 export const fetchTraffic = () => {
@@ -10,4 +10,23 @@ export const fetchTraffic = () => {
       payload: response.data
     });
   }
-}
+};
+
+export const selectTraffic = (index) => {
+  return (dispatch) => {
+    dispatch({
+      type: SELECT_TRAFFIC,
+      payload: index
+    });
+  }
+};
+
+export const selectNextTraffic = () => {
+  return (dispatch) => {
+    dispatch({
+      type: SELECT_NEXT_TRAFFIC,
+      payload: index
+    });
+  }
+};
+
