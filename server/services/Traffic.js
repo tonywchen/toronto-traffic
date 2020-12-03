@@ -62,6 +62,10 @@ class TrafficService {
         'interval': '$_id.interval',
         'data': '$data'
       }
+    }, {
+      '$sort': {
+        'timestamp': 1
+      }
     }];
 
     const recentPathStatuses = await PathStatus.aggregate(pathStatusPipeline);
