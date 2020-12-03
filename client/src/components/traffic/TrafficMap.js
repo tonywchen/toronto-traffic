@@ -15,27 +15,46 @@ const TRAFFIC_COLOUR = (score) => {
 
 const TrafficMap = () => {
   const [currentTrafficIndex, setCurrentTrafficIndex] = useState(null);
+
+  const requestRef = React.useRef();
+  const previousTimeRef = React.useRef();
+
   const traffic = useSelector(state => state.traffic);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchTraffic()).then(startAnimateTraffic);
+    dispatch(fetchTraffic()).then(() => {
+      requestRef.current = requestAnimationFrame(animateTraffic);
+    });
+
+    return () => {
+      cancelAnimationFrame(requestRef.current);
+    }
   }, []);
 
-  useEffect(() => {
-    setTimeout(() => {
-      if (traffic && traffic.length) {
-        if (currentTrafficIndex === null) {
-          setCurrentTrafficIndex(0);
-        } else {
-          setCurrentTrafficIndex((currentTrafficIndex + 1) % traffic.length);
-        }
-      }
-    }, 2000);
-  }, [currentTrafficIndex]);
+  const animateTraffic = (timestamp) => {
+    if (previousTimeRef.current != undefined) {
+      const timeDiff = timestamp - previousTimeRef.current;
 
-  const startAnimateTraffic = () => {
-    // setCurrentTrafficIndex(0);
+      if (timeDiff > 1000) {
+        previousTimeRef.current = timestamp;
+        setCurrentTrafficIndex(previousValue => {
+          if (traffic.length === 0) {
+            return null;
+          }
+
+          if (Number.isInteger(previousValue)) {
+            return (previousValue + 1) % traffic.length;
+          } else {
+            return 0;
+          }
+        });
+      }
+    } else {
+      previousTimeRef.current = timestamp;
+    }
+
+    requestRef.current = requestAnimationFrame(animateTraffic);
   };
 
   const renderTrafficSnapshot = (snapshot) => {
@@ -56,7 +75,7 @@ const TrafficMap = () => {
     })
   };
 
-  if (currentTrafficIndex === null) {
+  if (!Number.isInteger(currentTrafficIndex)) {
     return null;
   }
 
