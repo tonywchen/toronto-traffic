@@ -1,14 +1,20 @@
 import { FETCH_TRAFFIC } from '../actions/types';
 
-export default (traffic = [], action) => {
+const initialState = {
+  trafficList: [],
+  selectedTraffic: {},
+  selectedTrafficIndex: null
+};
+
+export default (state = initialState, action) => {
   switch (action.type) {
     case FETCH_TRAFFIC:
       // TODO: consider the possibility to use a cache using timestamp/route as key
       // to reduce number of requests, since most of these data are historical and
       // should not change
-      traffic.length = 0;
-      traffic.push(...action.payload);
-      return traffic;
+      state.trafficList.length = 0;
+      state.trafficList.push(...action.payload);
+      return state;
     default:
       return traffic;
   }

@@ -18,8 +18,9 @@ const TrafficMap = () => {
 
   const requestRef = React.useRef();
   const previousTimeRef = React.useRef();
+  const isPausedRef = React.useRef(false);
 
-  const traffic = useSelector(state => state.traffic);
+  const trafficList = useSelector(store => store.traffic.trafficList);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -27,10 +28,26 @@ const TrafficMap = () => {
       requestRef.current = requestAnimationFrame(animateTraffic);
     });
 
+    const handleKeyupListener = window.addEventListener('keyup', (event) => {
+      if (event.code === 'Space') {
+        toggleAnimateTraffic();
+      }
+    })
+
     return () => {
       cancelAnimationFrame(requestRef.current);
+      window.removeEventListener('keyup', handleKeyupListener);
     }
   }, []);
+
+  const toggleAnimateTraffic = () => {
+    isPausedRef.current = !isPausedRef.current;
+    if (isPausedRef.current) {
+      cancelAnimationFrame(requestRef.current);
+    } else {
+      requestRef.current = requestAnimationFrame(animateTraffic);
+    }
+  }
 
   const animateTraffic = (timestamp) => {
     if (previousTimeRef.current != undefined) {
@@ -38,13 +55,14 @@ const TrafficMap = () => {
 
       if (timeDiff > 1000) {
         previousTimeRef.current = timestamp;
+
         setCurrentTrafficIndex(previousValue => {
-          if (traffic.length === 0) {
+          if (trafficList.length === 0) {
             return null;
           }
 
           if (Number.isInteger(previousValue)) {
-            return (previousValue + 1) % traffic.length;
+            return (previousValue + 1) % trafficList.length;
           } else {
             return 0;
           }
@@ -80,7 +98,7 @@ const TrafficMap = () => {
   }
 
   return (
-    renderTrafficSnapshot(traffic[currentTrafficIndex])
+    renderTrafficSnapshot(trafficList[currentTrafficIndex])
   );
 };
 

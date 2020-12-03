@@ -9,7 +9,7 @@ const App = () => {
     <div>
       Hello World!
       <Mapbox>
-        <Layer id="marker" key="marker"></Layer>
+        <TrafficMap></TrafficMap>
       </Mapbox>
     </div>
   );
