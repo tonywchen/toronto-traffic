@@ -14,66 +14,8 @@ const TRAFFIC_COLOUR = (score) => {
 };
 
 const TrafficMap = () => {
-  const [currentTrafficIndex, setCurrentTrafficIndex] = useState(null);
-
-  const requestRef = React.useRef();
-  const previousTimeRef = React.useRef();
-  const isPausedRef = React.useRef(false);
-
   const trafficList = useSelector(store => store.traffic.trafficList);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(fetchTraffic()).then(() => {
-      requestRef.current = requestAnimationFrame(animateTraffic);
-    });
-
-    const handleKeyupListener = window.addEventListener('keyup', (event) => {
-      if (event.code === 'Space') {
-        toggleAnimateTraffic();
-      }
-    })
-
-    return () => {
-      cancelAnimationFrame(requestRef.current);
-      window.removeEventListener('keyup', handleKeyupListener);
-    }
-  }, []);
-
-  const toggleAnimateTraffic = () => {
-    isPausedRef.current = !isPausedRef.current;
-    if (isPausedRef.current) {
-      cancelAnimationFrame(requestRef.current);
-    } else {
-      requestRef.current = requestAnimationFrame(animateTraffic);
-    }
-  }
-
-  const animateTraffic = (timestamp) => {
-    if (previousTimeRef.current != undefined) {
-      const timeDiff = timestamp - previousTimeRef.current;
-
-      if (timeDiff > 1000) {
-        previousTimeRef.current = timestamp;
-
-        setCurrentTrafficIndex(previousValue => {
-          if (trafficList.length === 0) {
-            return null;
-          }
-
-          if (Number.isInteger(previousValue)) {
-            return (previousValue + 1) % trafficList.length;
-          } else {
-            return 0;
-          }
-        });
-      }
-    } else {
-      previousTimeRef.current = timestamp;
-    }
-
-    requestRef.current = requestAnimationFrame(animateTraffic);
-  };
+  const selectedTrafficIndex = useSelector(store => store.traffic.selectedTrafficIndex);
 
   const renderTrafficSnapshot = (snapshot) => {
     return snapshot.data.map((datum) => {
@@ -93,12 +35,12 @@ const TrafficMap = () => {
     })
   };
 
-  if (!Number.isInteger(currentTrafficIndex)) {
+  if (!Number.isInteger(selectedTrafficIndex)) {
     return null;
   }
 
   return (
-    renderTrafficSnapshot(trafficList[currentTrafficIndex])
+    renderTrafficSnapshot(trafficList[selectedTrafficIndex])
   );
 };
 

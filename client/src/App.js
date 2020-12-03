@@ -1,6 +1,8 @@
 import React from 'react';
-import Mapbox from './Mapbox/Mapbox';
-import Layer from './Mapbox/Layer';
+
+import Mapbox from './components/mapbox/Mapbox';
+import TrafficMap from './components/traffic/TrafficMap';
+import TrafficDetail from './components/traffic/TrafficDetail';
 
 import './styles.scss';
 
@@ -11,6 +13,7 @@ const App = () => {
       <Mapbox>
         <TrafficMap></TrafficMap>
       </Mapbox>
+      <TrafficDetail />
     </div>
   );
 };
