@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchTraffic, selectNextTraffic, selectTraffic } from '../../actions/traffic';
 import moment from 'moment-timezone';
@@ -10,25 +10,17 @@ const TrafficDetail = () => {
 
   const animationFrameRef = React.useRef();
   const previousTimeRef = React.useRef();
-  const isPausedRef = React.useRef(false);
+
+  const [isPaused, setIsPaused] = React.useState(true);
 
   /**
    * Animation Control Functions
    */
   useEffect(() => {
-    dispatch(fetchTraffic()).then(() => {
-      animationFrameRef.current = requestAnimationFrame(animateTraffic);
-    });
-
-    const handleKeyupListener = window.addEventListener('keyup', (event) => {
-      if (event.code === 'KeyP') {
-        toggleAnimateTraffic();
-      }
-    })
+    dispatch(fetchTraffic());
 
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
-      window.removeEventListener('keyup', handleKeyupListener);
     }
   }, []);
 
@@ -39,18 +31,6 @@ const TrafficDetail = () => {
       if (timeDiff > 1000) {
         previousTimeRef.current = timestamp;
         dispatch(selectNextTraffic());
-
-/*         setCurrentTrafficIndex(previousValue => {
-          if (trafficList.length === 0) {
-            return null;
-          }
-
-          if (Number.isInteger(previousValue)) {
-            return (previousValue + 1) % trafficList.length;
-          } else {
-            return 0;
-          }
-        }); */
       }
     } else {
       previousTimeRef.current = timestamp;
@@ -60,13 +40,13 @@ const TrafficDetail = () => {
   };
 
   const toggleAnimateTraffic = () => {
-    isPausedRef.current = !isPausedRef.current;
-    if (isPausedRef.current) {
-      console.log('cancelAnimationFrame');
+    if (!isPaused) {
       cancelAnimationFrame(animationFrameRef.current);
     } else {
       animationFrameRef.current = requestAnimationFrame(animateTraffic);
     }
+
+    setIsPaused(!isPaused);
   };
 
   /**
@@ -80,7 +60,7 @@ const TrafficDetail = () => {
    * Render Helper Functions
    */
   const renderTrafficDetail = () => {
-    if (selectedTrafficIndex === null) {
+    if (trafficList.length === 0) {
       return <h4>None!</h4>;
     } else {
       return (
@@ -90,14 +70,25 @@ const TrafficDetail = () => {
       );
     }
   };
-  const renderTrafficSelector = (trafficList) => {
-    return trafficList.map((traffic, index) => {
-      return (
-        <div key={traffic.timestamp} onClick={() => dispatchSelectTraffic(index)}>
-          { moment(traffic.timestamp).format('YYYY/MM/DD HH:mm') }
+  const renderTrafficController = (trafficList) => {
+    const trafficListSize = trafficList.length;
+
+    if (trafficListSize === 0) {
+      return null;
+    }
+
+    return (
+      <div className="traffic-controller">
+        <div className="traffic-playback">
+          <button className="traffic-playback__toggle" onClick={toggleAnimateTraffic}>
+            { (isPaused)? 'Play' : 'Pause'}
+          </button>
         </div>
-      );
-    });
+        <div className="traffic-selector">
+          <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="sliderr" onChange={e => dispatchSelectTraffic(e.target.value - 1)}></input>
+        </div>
+      </div>
+    );
   };
 
   /**
@@ -107,7 +98,7 @@ const TrafficDetail = () => {
     <div className="traffic-detail">
       { renderTrafficDetail() }
       <div className="traffic-selector">
-        { renderTrafficSelector(trafficList) }
+        { renderTrafficController(trafficList) }
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { FETCH_TRAFFIC, SELECT_TRAFFIC, SELECT_NEXT_TRAFFIC } from '../actions/t
 const initialState = {
   trafficList: [],
   selectedTraffic: {},
-  selectedTrafficIndex: null
+  selectedTrafficIndex: 0
 };
 
 export default (state = initialState, action) => {
@@ -14,6 +14,7 @@ export default (state = initialState, action) => {
       // should not change
       state.trafficList.length = 0;
       state.trafficList.push(...action.payload);
+      state.selectedTrafficIndex = 0;
       return state;
     case SELECT_TRAFFIC:
       console.log(`SELECT_TRAFFIC: ${action.payload}`);
@@ -24,6 +25,7 @@ export default (state = initialState, action) => {
         return state;
       }
 
+      // TODO: consider whether selectedTrafficIndex can ever be null
       if (state.selectedTrafficIndex === null) {
         state.selectedTrafficIndex = 0;
       } else {

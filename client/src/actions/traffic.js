@@ -24,8 +24,7 @@ export const selectTraffic = (index) => {
 export const selectNextTraffic = () => {
   return (dispatch) => {
     dispatch({
-      type: SELECT_NEXT_TRAFFIC,
-      payload: index
+      type: SELECT_NEXT_TRAFFIC
     });
   }
 };
