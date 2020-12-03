@@ -17,7 +17,11 @@ const TrafficDetail = () => {
    * Animation Control Functions
    */
   useEffect(() => {
-    dispatch(fetchTraffic());
+    dispatch(fetchTraffic()).then(() => {
+      if (!isPaused) {
+        animationFrameRef.current = requestAnimationFrame(animateTraffic);
+      }
+    });
 
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
