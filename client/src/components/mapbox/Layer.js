@@ -5,14 +5,13 @@ const Layer = ({data, id}) => {
   const map = useContext(MapContext);
 
   useEffect(() => {
-    return function cleanup() {
+    return () => {
       if (map) {
-        console.log(`cleanup: ${id}`);
         map.removeLayer(id);
         map.removeSource(id);
       }
     };
-  });
+  }, []);
 
   const createLine = (data, id) => {
     const source = {
