@@ -13,16 +13,28 @@ const Layer = ({data, id}) => {
     };
   }, []);
 
+  const addOrUpdateSource = (id, sourceData, layer) => {
+    const existingSource = map.getSource(id);
+
+    if (existingSource) {
+      existingSource.setData(sourceData);
+    } else {
+      const source = {
+        type: 'geojson',
+        data: sourceData
+      };
+      map.addSource(id, source);
+      map.addLayer(layer);
+    }
+  };
+
   const createLine = (data, id) => {
-    const source = {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: data.legs
-        }
+    const sourceData = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: data.legs
       }
     };
 
@@ -40,8 +52,7 @@ const Layer = ({data, id}) => {
       }
     };
 
-    map.addSource(id, source);
-    map.addLayer(layer);
+    addOrUpdateSource(id, sourceData, layer);
   };
 
   if (map) {

@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchTraffic } from '../../actions/traffic';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import Layer from '../mapbox/Layer';
 
 const TRAFFIC_COLOUR = (score) => {

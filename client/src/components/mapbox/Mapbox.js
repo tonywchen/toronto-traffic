@@ -5,7 +5,7 @@ import MapMetadata from './MapMetadata';
 import MapContext from '../common/MapContext';
 
 const DEFAULT = {
-  lng: -79.3617,
+  lng: -79.3930,
   lat: 43.6560,
   zoom: 12.05
 };
