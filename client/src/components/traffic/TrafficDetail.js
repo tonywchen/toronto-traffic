@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchTraffic, selectNextTraffic, selectTraffic } from '../../actions/traffic';
 import moment from 'moment-timezone';
+import _ from 'lodash';
 
 const TrafficDetail = () => {
   const trafficList = useSelector(store => store.traffic.trafficList);
@@ -32,7 +33,7 @@ const TrafficDetail = () => {
     if (previousTimeRef.current != undefined) {
       const timeDiff = timestamp - previousTimeRef.current;
 
-      if (timeDiff > 1000) {
+      if (timeDiff > 2000) {
         previousTimeRef.current = timestamp;
         dispatch(selectNextTraffic());
       }
@@ -59,6 +60,9 @@ const TrafficDetail = () => {
   const dispatchSelectTraffic = (index) => {
     dispatch(selectTraffic(index));
   };
+  const debouncedDispatchSelectTraffic = _.debounce((index) => {
+    dispatchSelectTraffic(index);
+  });
 
   /**
    * Render Helper Functions
@@ -89,7 +93,7 @@ const TrafficDetail = () => {
           </button>
         </div>
         <div className="traffic-selector">
-          <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="sliderr" onChange={e => dispatchSelectTraffic(e.target.value - 1)}></input>
+          <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="sliderr" onChange={e => debouncedDispatchSelectTraffic(e.target.value - 1)}></input>
         </div>
       </div>
     );
