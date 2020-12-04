@@ -153,7 +153,11 @@ const Compute = (debug = false) => {
     const toStopData = stopData[pathDatum.to];
 
     const response = await directionsService.getDirections({
-      profile: 'driving-traffic',
+      // Using a `cycling` profile because of many local traffic rules that affect
+      // driving directions for personal vehicles. Cycling route has way fewer
+      // rules and match more closely to public transit directions
+      profile: 'cycling',
+      alternatives: true,
       waypoints: [{
         coordinates: [fromStopData.lon, fromStopData.lat],
         approach: 'unrestricted'
@@ -163,7 +167,26 @@ const Compute = (debug = false) => {
       geometries: 'geojson'
     }).send();
 
-    const legs = response.body.routes[0].geometry.coordinates;
+    const mostDirect = {
+      legs: null,
+      distance: -1
+    };
+
+    for (const route of response.body.routes) {
+      const shouldReplace = (mostDirect.distance === -1
+        || route.distance < mostDirect.distance);
+
+      if (shouldReplace) {
+        mostDirect.legs = route.geometry.coordinates;
+        mostDirect.distance = route.distance;
+      }
+    }
+
+    const legs = mostDirect.legs;
+    if (legs) {
+      return;
+    }
+
     const updatedPathObj = await Path.findOneAndUpdate({
       from: pathDatum.from,
       to: pathDatum.to
