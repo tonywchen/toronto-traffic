@@ -3,7 +3,11 @@ import { FETCH_TRAFFIC, SELECT_TRAFFIC, SELECT_NEXT_TRAFFIC } from '../actions/t
 const initialState = {
   trafficList: [],
   selectedTraffic: {},
-  selectedTrafficIndex: 0
+  selectedTrafficIndex: 0,
+  timestamp: {
+    from: 0,
+    to: 0
+  }
 };
 
 export default (state = initialState, action) => {
@@ -13,10 +17,11 @@ export default (state = initialState, action) => {
       // to reduce number of requests, since most of these data are historical and
       // should not change
       state.selectedTrafficIndex = 0;
-      state.trafficList = action.payload;
+      state.trafficList = action.payload.results;
+      state.timestamp.from = action.payload.from;
+      state.timestamp.to = action.payload.to;
       return state;
     case SELECT_TRAFFIC:
-      console.log(`SELECT_TRAFFIC: ${action.payload}`);
       state.selectedTrafficIndex = action.payload;
       return state;
     case SELECT_NEXT_TRAFFIC:

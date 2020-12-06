@@ -1,9 +1,10 @@
 import { FETCH_TRAFFIC, SELECT_TRAFFIC, SELECT_NEXT_TRAFFIC } from './types';
 import resource from '../resources/traffic';
 
-export const fetchTraffic = () => {
+export const fetchTraffic = (from) => {
+  console.log(`actions.fetchTraffic: ${from}`);
   return async (dispatch) => {
-    const response = await resource.fetchTraffic();
+    const response = await resource.fetchTraffic(from);
 
     dispatch({
       type: FETCH_TRAFFIC,

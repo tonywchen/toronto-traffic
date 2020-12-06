@@ -2,7 +2,7 @@ import React from 'react';
 
 import Mapbox from './components/mapbox/Mapbox';
 import TrafficMap from './components/traffic/TrafficMap';
-import TrafficDetail from './components/traffic/TrafficDetail';
+import NavigationControl from './components/navigation/NavigationControl';
 
 import './styles.scss';
 
@@ -13,7 +13,7 @@ const App = () => {
       <Mapbox>
         <TrafficMap></TrafficMap>
       </Mapbox>
-      <TrafficDetail />
+      <NavigationControl />
     </div>
   );
 };

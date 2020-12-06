@@ -23,7 +23,11 @@ const TrafficMap = () => {
     // const minIndex = Math.max(0, selectedTrafficIndex - 1);
 
     // return trafficList.slice(selectedTrafficIndex, selectedTrafficIndex + 1);
-    return [trafficList[selectedTrafficIndex]];
+    if (trafficList[selectedTrafficIndex]) {
+      return [trafficList[selectedTrafficIndex]];
+    } else {
+      return [];
+    }
   };
 
   const buildTrafficPaths = (snapshots) => {
@@ -31,6 +35,10 @@ const TrafficMap = () => {
     Object.values(pathMap).forEach((path) => {
       path.colour = 'grey';
     });
+
+    if (snapshots.length === 0) {
+      return;
+    }
 
     snapshots.forEach((snapshot, index) => {
       const opacity = 1; // (index + 1) / snapshots.length;
@@ -61,7 +69,6 @@ const TrafficMap = () => {
 
     Object.keys(pathMap).forEach((pathId) => {
       const pathData = pathMap[pathId];
-      console.log(`${moment(pathData.timestamp).format('YYYY/MM/DD HH:mm:ss')} - ${pathData.opacity}`);
     });
   };
 
@@ -71,34 +78,6 @@ const TrafficMap = () => {
       const pathData = pathMap[pathId];
       return <Layer type="lineString" data={pathData} id={pathId} key={pathId} />;
     });
-  };
-
-  const renderTrafficSnapshot = (snapshots) => {
-/*     return snapshots.map((snapshot, index) => {
-      const opacity = (index + 1) / snapshots.length;
-
-      return snapshot.data.map((datum) => {
-        const legs = datum.path.legs;
-        const average = datum.average;
-        const colour = TRAFFIC_COLOUR(average);
-        const layerData = {
-          legs,
-          colour,
-          opacity,
-          from: datum.path.from,
-          to: datum.path.to
-        };
-
-        const layerId = `${snapshot.timestamp}_${datum.path.from}_${datum.path.to}`;
-
-        return (
-          <Layer type="lineString" data={layerData} id={layerId} key={layerId} />
-        );
-      });
-    }); */
-
-
-
   };
 
   if (!Number.isInteger(selectedTrafficIndex)) {

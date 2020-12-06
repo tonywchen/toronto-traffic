@@ -4,9 +4,14 @@ import { fetchTraffic, selectNextTraffic, selectTraffic } from '../../actions/tr
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
-const TrafficDetail = () => {
+import TrafficControl from '../traffic/TrafficControl';
+
+const NavigationControl = () => {
   const trafficList = useSelector(store => store.traffic.trafficList);
   const selectedTrafficIndex = useSelector(store => store.traffic.selectedTrafficIndex);
+  const timestampFrom = useSelector(store => store.traffic.timestamp.from);
+  const timestampTo = useSelector(store => store.traffic.timestamp.to);
+
   const dispatch = useDispatch();
 
   const animationFrameRef = React.useRef();
@@ -64,36 +69,54 @@ const TrafficDetail = () => {
     dispatchSelectTraffic(index);
   });
 
+  const dispatchFetchTraffic = (amount, unit) => {
+    setIsPaused(true);
+
+    let newTimestampFrom;
+    if (amount && unit) {
+      newTimestampFrom = moment(timestampFrom).add(amount, unit).valueOf();
+    }
+    console.log(newTimestampFrom);
+
+    dispatch(fetchTraffic(newTimestampFrom));
+  };
+
   /**
    * Render Helper Functions
    */
-  const renderTrafficDetail = () => {
+  const renderDetail = () => {
     if (trafficList.length === 0) {
-      return <h4>None!</h4>;
+      return (
+        <div className="navigation-detail">
+          <h4>No data available</h4>
+        </div>
+      );
     } else {
       return (
-        <h4>
-          { moment(trafficList[selectedTrafficIndex].timestamp).format('YYYY/MM/DD HH:mm') }
-        </h4>
+        <div className="navigation-detail">
+          <h4>{ moment(trafficList[selectedTrafficIndex].timestamp).format('YYYY/MM/DD HH:mm') }</h4>
+        </div>
       );
     }
   };
-  const renderTrafficController = (trafficList) => {
+  const renderControls = (trafficList) => {
     const trafficListSize = trafficList.length;
 
-    if (trafficListSize === 0) {
-      return null;
-    }
-
     return (
-      <div className="traffic-controller">
-        <div className="traffic-playback">
-          <button className="traffic-playback__toggle" onClick={toggleAnimateTraffic}>
+      <div className="navigation-control">
+        <div className="navigation-playback">
+          <button className="navigation-playback__toggle" onClick={toggleAnimateTraffic}>
             { (isPaused)? 'Play' : 'Pause'}
           </button>
+          <button className="navigation__button" disabled={!timestampFrom}  onClick={() => dispatchFetchTraffic(-1, 'days')}>
+            &lt; Previous Hour
+          </button>
+          <button className="navigation__button" disabled={!timestampTo}  onClick={() => dispatchFetchTraffic(1, 'days')}>
+            Next Hour &gt;
+          </button>
         </div>
-        <div className="traffic-selector">
-          <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="sliderr" onChange={e => debouncedDispatchSelectTraffic(e.target.value - 1)}></input>
+        <div className="navigation-selector">
+          <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="slider" onChange={e => debouncedDispatchSelectTraffic(e.target.value - 1)}></input>
         </div>
       </div>
     );
@@ -103,13 +126,11 @@ const TrafficDetail = () => {
    * Render Function
    */
   return (
-    <div className="traffic-detail">
-      { renderTrafficDetail() }
-      <div className="traffic-selector">
-        { renderTrafficController(trafficList) }
-      </div>
+    <div className="navigation">
+      { renderDetail() }
+      { renderControls(trafficList) }
     </div>
   );
 };
 
-export default TrafficDetail;
+export default NavigationControl;
