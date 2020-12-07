@@ -6,7 +6,7 @@ import _ from 'lodash';
 
 import TrafficControl from '../traffic/TrafficControl';
 
-const NavigationControl = () => {
+const Dashboard = () => {
   const trafficList = useSelector(store => store.traffic.trafficList);
   const selectedTrafficIndex = useSelector(store => store.traffic.selectedTrafficIndex);
   const timestampFrom = useSelector(store => store.traffic.timestamp.from);
@@ -85,37 +85,35 @@ const NavigationControl = () => {
    * Render Helper Functions
    */
   const renderDetail = () => {
-    if (trafficList.length === 0) {
-      return (
-        <div className="navigation-detail">
-          <h4>No data available</h4>
-        </div>
-      );
-    } else {
-      return (
-        <div className="navigation-detail">
-          <h4>{ moment(trafficList[selectedTrafficIndex].timestamp).format('YYYY/MM/DD HH:mm') }</h4>
-        </div>
-      );
-    }
+    return (
+      <div className="dashboard-detail">
+        {
+          (trafficList.length === 0)
+          ? (<h4>No data available</h4>)
+          : (
+            <h4>{ moment(trafficList[selectedTrafficIndex].timestamp).format('YYYY/MM/DD HH:mm') }</h4>
+          )
+        }
+      </div>
+    );
   };
   const renderControls = (trafficList) => {
     const trafficListSize = trafficList.length;
 
     return (
-      <div className="navigation-control">
-        <div className="navigation-playback">
-          <button className="navigation-playback__toggle" onClick={toggleAnimateTraffic}>
+      <div className="dashboard-controls">
+        <div className="dashboard-playback">
+          <button className="dashboard-playback__toggle" onClick={toggleAnimateTraffic}>
             { (isPaused)? 'Play' : 'Pause'}
           </button>
-          <button className="navigation__button" disabled={!timestampFrom}  onClick={() => dispatchFetchTraffic(-1, 'days')}>
+          <button className="dashboard" disabled={!timestampFrom}  onClick={() => dispatchFetchTraffic(-1, 'days')}>
             &lt; Previous Hour
           </button>
-          <button className="navigation__button" disabled={!timestampTo}  onClick={() => dispatchFetchTraffic(1, 'days')}>
+          <button className="dashboard" disabled={!timestampTo}  onClick={() => dispatchFetchTraffic(1, 'days')}>
             Next Hour &gt;
           </button>
         </div>
-        <div className="navigation-selector">
+        <div className="dashboard-selector">
           <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="slider" onChange={e => debouncedDispatchSelectTraffic(e.target.value - 1)}></input>
         </div>
       </div>
@@ -126,11 +124,11 @@ const NavigationControl = () => {
    * Render Function
    */
   return (
-    <div className="navigation">
+    <div className="dashboard">
       { renderDetail() }
       { renderControls(trafficList) }
     </div>
   );
 };
 
-export default NavigationControl;
+export default Dashboard;
