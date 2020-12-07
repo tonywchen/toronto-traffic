@@ -46,7 +46,7 @@ const Mapbox = ({ children }) => {
   return (
     <MapContext.Provider value={map}>
       <div className="map">
-        <div className="map-container" ref={mapContainer}>
+        <div className="map-container absolute inset-0 z-0" ref={mapContainer}>
           { renderChildren() }
         </div>
         <div className="map-detail">

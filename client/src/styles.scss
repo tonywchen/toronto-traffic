@@ -1,7 +1,25 @@
+:root {
+  --color-primary: #d97706;
+  --color-secondary: #2563eb;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.map-container {
-  min-height: 500px;
+/* .map-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
 }
+
+.dashboard {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+} */

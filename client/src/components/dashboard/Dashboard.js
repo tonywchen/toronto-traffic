@@ -4,7 +4,8 @@ import { fetchTraffic, selectNextTraffic, selectTraffic } from '../../actions/tr
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
-import TrafficControl from '../traffic/TrafficControl';
+import { ReactComponent as PlayIcon } from '../icons/play.svg';
+import { ReactComponent as StopIcon } from '../icons/stop.svg';
 
 const Dashboard = () => {
   const trafficList = useSelector(store => store.traffic.trafficList);
@@ -86,10 +87,10 @@ const Dashboard = () => {
    */
   const renderDetail = () => {
     return (
-      <div className="dashboard-detail">
+      <div className="dashboard-detail text-sm text-white">
         {
           (trafficList.length === 0)
-          ? (<h4>No data available</h4>)
+          ? (<h4>No data available for {moment(timestampFrom).format('YYYY/MM/DD')} </h4>)
           : (
             <h4>{ moment(trafficList[selectedTrafficIndex].timestamp).format('YYYY/MM/DD HH:mm') }</h4>
           )
@@ -102,19 +103,37 @@ const Dashboard = () => {
 
     return (
       <div className="dashboard-controls">
-        <div className="dashboard-playback">
-          <button className="dashboard-playback__toggle" onClick={toggleAnimateTraffic}>
-            { (isPaused)? 'Play' : 'Pause'}
+        <div className="dashboard__select flex justify-end space-x-2">
+          <button
+            className="dashboard__previous-unit flex items-center justify-center rounded-md text-sm text-white border border-gray-500 px-4 py-2 hover:bg-primary"
+            disabled={!timestampFrom}
+            onClick={() => dispatchFetchTraffic(-1, 'days')}>
+            &lt; Previous Day
           </button>
-          <button className="dashboard" disabled={!timestampFrom}  onClick={() => dispatchFetchTraffic(-1, 'days')}>
-            &lt; Previous Hour
-          </button>
-          <button className="dashboard" disabled={!timestampTo}  onClick={() => dispatchFetchTraffic(1, 'days')}>
-            Next Hour &gt;
+          <button
+            className="dashboard__next-unit flex items-center justify-center rounded-md text-sm text-white border border-gray-500 px-4 py-2 hover:bg-primary"
+            disabled={!timestampTo}
+            onClick={() => dispatchFetchTraffic(1, 'days')}>
+            Next Day &gt;
           </button>
         </div>
-        <div className="dashboard-selector">
-          <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="slider" onChange={e => debouncedDispatchSelectTraffic(e.target.value - 1)}></input>
+        <div className="dashboard__timeline flex space-x-2">
+          <div className="dashboard__timeline-control flex-grow-0">
+            <button
+              className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white  border border-gray-500 px-2 py-2 hover:bg-primary"
+              onClick={toggleAnimateTraffic}>
+              <div className="dashboard__timeline-toggle-inner w-6 h-6">
+                {
+                  (isPaused)
+                  ? <PlayIcon />
+                  : <StopIcon />
+                }
+              </div>
+            </button>
+          </div>
+          <div className="dashboard__timeline-progress flex flex-grow">
+            <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="slider w-full align-middle" onChange={e => debouncedDispatchSelectTraffic(e.target.value - 1)}></input>
+          </div>
         </div>
       </div>
     );
@@ -124,9 +143,11 @@ const Dashboard = () => {
    * Render Function
    */
   return (
-    <div className="dashboard">
-      { renderDetail() }
-      { renderControls(trafficList) }
+    <div className="dashboard absolute inset-x-0 bottom-0 py-16 px-16">
+      <div className="z-50 bg-gray-50 bg-opacity-10 rounded w-full py-4 px-4">
+        { renderDetail() }
+        { renderControls(trafficList) }
+      </div>
     </div>
   );
 };
