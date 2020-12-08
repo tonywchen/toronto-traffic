@@ -141,6 +141,7 @@ const Compute = (debug = false) => {
 
     if (pathDatumObj) {
       pathDatum.legs = pathDatumObj.legs;
+      pathDatum.polyline = pathDatumObj.polyline;
       pathDatum.obj = pathDatumObj;
 
       return true;
@@ -152,38 +153,17 @@ const Compute = (debug = false) => {
     const fromStopData = stopData[pathDatum.from];
     const toStopData = stopData[pathDatum.to];
 
-    const response = await directionsService.getDirections({
-      // Using a `cycling` profile because of many local traffic rules that affect
-      // driving directions for personal vehicles. Cycling route has way fewer
-      // rules and match more closely to public transit directions
-      profile: 'cycling',
-      alternatives: true,
-      waypoints: [{
-        coordinates: [fromStopData.lon, fromStopData.lat],
-        approach: 'unrestricted'
-      }, {
-        coordinates: [toStopData.lon, toStopData.lat],
-      }],
-      geometries: 'geojson'
-    }).send();
-
-    const mostDirect = {
-      legs: null,
-      distance: -1
-    };
-
-    for (const route of response.body.routes) {
-      const shouldReplace = (mostDirect.distance === -1
-        || route.distance < mostDirect.distance);
-
-      if (shouldReplace) {
-        mostDirect.legs = route.geometry.coordinates;
-        mostDirect.distance = route.distance;
+    const response = await googleMapsClient.directions({
+      params: {
+        origin: [fromStopData.lat, fromStopData.lon],
+        destination: [toStopData.lat, toStopData.lon],
+        key: tokens.googleMaps,
+        mode: 'bicycling',
       }
-    }
+    });
 
-    const legs = mostDirect.legs;
-    if (legs) {
+    const result = processDirectionsResponse(response);
+    if (!result.success) {
       return;
     }
 
@@ -191,14 +171,40 @@ const Compute = (debug = false) => {
       from: pathDatum.from,
       to: pathDatum.to
     }, {
-      legs: legs
+      legs: result.legs,
+      polyline: result.polyline
     }, {
       new: true,
       upsert: true
     });
 
-    pathDatum.legs = legs;
+    pathDatum.legs = result.legs;
+    pathDatum.polyline = result.polyline;
     pathDatum.obj = updatedPathObj;
+  };
+  const processDirectionsResponse = (response) => {
+    const polylineObj = response.data.routes[0].overview_polyline;
+    const polylineValue = polylineObj.points;
+
+    const legs = polyline.decode(polylineValue);
+    if (!legs || legs.length === 0) {
+      return {
+        success: false
+      };
+    }
+
+    const transformedLegs = legs.map((leg) => {
+      // For coordinates, Google Maps uses [Lat, Lng] format whereas
+      // Mapbox uses [Lng, Lat] format. For now we are sticking with
+      // Mapbox's convention
+      return [leg[1], leg[0]];
+    });
+
+    return {
+      success: true,
+      legs: transformedLegs,
+      polyline: polylineValue
+    };
   };
 
   const savePathStatuses = async (pathData) => {

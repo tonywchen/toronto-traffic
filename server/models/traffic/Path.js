@@ -15,7 +15,8 @@ const mongoose = require('mongoose');
 const Path = mongoose.model('Path', {
   from: String, // stop tag of the from stop
   to: String, // stop tag of the to stop
-  legs: Array // Array of coordinates [longitudes, latitudes]
+  legs: Array, // Array of coordinates [longitudes, latitudes],
+  polyline: String
 });
 
 module.exports = Path;

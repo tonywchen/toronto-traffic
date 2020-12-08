@@ -2,10 +2,13 @@
  * The purpose of this script is to update all existing path and
  * path status data. This is helpful in many scenarios:
  * - update routing direction between stops based on updated/better
- * routing data from Mapbox API. One instance is that the earlier
- * versino of the routing is based on driving directions, but later
- * the cycling directions match much closer to public transit
- * directions
+ * routing data. Attempts have been made to get routing data from
+ * Mapbox "driving" direction, Mapbox "cycling" direction, Google
+ * Maps "transit" direction, and Google Map "cycling" direction.
+ * So far none of the options are perfect, but Google Map "cycling"
+ * direction fits the routing the best out of the 4. This is why
+ * the current version is using Google Map "cycling" direction to
+ * provide the routing.
  * - update routing direction due to updated stop information. One
  * possible example is that the coordinates provided by Nextbus
  * API is incorrect, and this script can be run after those
@@ -18,20 +21,64 @@ const Stop = require('../../models/nextbus/Stop');
 const Path = require('../../models/traffic/Path');
 const PathStatus = require('../../models/traffic/PathStatus');
 
-const mbxClient = require('@mapbox/mapbox-sdk');
-const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
-
+const polyline = require('@mapbox/polyline');
 const tokens = require('../configs/tokens.json');
-const baseClient = mbxClient({ accessToken: tokens.mapbox });
-const directionsService = mbxDirections(baseClient);
 
+const GoogleMaps = require("@googlemaps/google-maps-services-js");
+const GoogleMapsClient = GoogleMaps.Client;
 
 mongoose.connect('mongodb://localhost:27017/toronto-traffic', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
+const processDirectionsResponse = (response) => {
+  /* const responseLegs = response.data.routes[0].legs || [];
+  const transitStep = responseLegs[0].steps.find((step) => {
+    return step['travel_mode'] === 'TRANSIT'
+  });
+
+  let polylineObj;
+  if (!transitStep) {
+    polylineObj = response.data.routes[0].overview_polyline;
+  } else {
+    polylineObj = transitStep.polyline;
+  }
+
+  if (!polylineObj) {
+    return {
+      success: false
+    };
+  } */
+
+  const polylineObj = response.data.routes[0].overview_polyline;
+  const polylineValue = polylineObj.points;
+
+  const legs = polyline.decode(polylineValue);
+  if (!legs || legs.length === 0) {
+    return {
+      success: false
+    };
+  }
+
+  const transformedLegs = legs.map((leg) => {
+    // For coordinates, Google Maps uses [Lat, Lng] format whereas
+    // Mapbox uses [Lng, Lat] format. For now we are sticking with
+    // Mapbox's convention
+    return [leg[1], leg[0]];
+  });
+
+  return {
+    success: true,
+    legs: transformedLegs,
+    polyline: polylineValue
+  };
+};
+
+
 (async () => {
+  const googleMapsClient = new GoogleMapsClient({});
+
   const stopMap = {};
   const stops = await Stop.find().lean();
   for (const stop of stops) {
@@ -47,38 +94,17 @@ mongoose.connect('mongodb://localhost:27017/toronto-traffic', {
     const fromStop = stopMap[pathFrom];
     const toStop = stopMap[pathTo];
 
-    const response = await directionsService.getDirections({
-      // Using a `cycling` profile because of many local traffic rules that affect
-      // driving directions for personal vehicles. Cycling route has way fewer
-      // rules and match more closely to public transit directions
-      profile: 'cycling',
-      alternatives: true,
-      waypoints: [{
-        coordinates: [fromStop.lon, fromStop.lat],
-        approach: 'unrestricted'
-      }, {
-        coordinates: [toStop.lon, toStop.lat],
-      }],
-      geometries: 'geojson'
-    }).send();
-
-    const mostDirect = {
-      legs: null,
-      distance: -1
-    };
-
-    for (const route of response.body.routes) {
-      const shouldReplace = (mostDirect.distance === -1
-        || route.distance < mostDirect.distance);
-
-      if (shouldReplace) {
-        mostDirect.legs = route.geometry.coordinates;
-        mostDirect.distance = route.distance;
+    const response = await googleMapsClient.directions({
+      params: {
+        origin: [fromStop.lat, fromStop.lon],
+        destination: [toStop.lat, toStop.lon],
+        key: tokens.googleMaps,
+        mode: 'bicycling',
       }
-    }
+    });
 
-    const legs = mostDirect.legs;
-    if (!legs) {
+    const result = processDirectionsResponse(response);
+    if (!result.success) {
       continue;
     }
 
@@ -86,14 +112,16 @@ mongoose.connect('mongodb://localhost:27017/toronto-traffic', {
       from: pathFrom,
       to: pathTo
     }, {
-      legs: legs
+      legs: result.legs,
+      polyline: result.polyline
     });
 
     await PathStatus.updateMany({
       'path.from': pathFrom,
       'path.to': pathTo
     }, {
-      'path.legs': legs
+      'path.legs': result.legs,
+      'path.polyline': result.polyline
     });
 
     counter++;
