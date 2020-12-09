@@ -1,22 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchTraffic, selectNextTraffic, selectTraffic } from '../../actions/traffic';
+import { selectTime, selectNextTime } from '../../actions/timeline';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
 import { ReactComponent as PlayIcon } from '../icons/play.svg';
 import { ReactComponent as StopIcon } from '../icons/stop.svg';
 
-const Dashboard = () => {
-  const trafficList = useSelector(store => store.traffic.trafficList);
-  const selectedTrafficIndex = useSelector(store => store.traffic.selectedTrafficIndex);
-  const timestampFrom = useSelector(store => store.traffic.timestamp.from);
-  const timestampTo = useSelector(store => store.traffic.timestamp.to);
+const Dashboard = ({ onDayChanged }) => {
+  const selectedTime = useSelector(store => store.timeline.selected);
+  const timestamps = useSelector(store => store.timeline.timestamps);
 
   const dispatch = useDispatch();
 
-  const animationFrameRef = React.useRef();
-  const previousTimeRef = React.useRef();
+  const animationFrameRef = React.useRef(null);
+  const previousTimeRef = React.useRef(null);
 
   const [isPaused, setIsPaused] = React.useState(true);
 
@@ -24,37 +22,43 @@ const Dashboard = () => {
    * Animation Control Functions
    */
   useEffect(() => {
-    dispatch(fetchTraffic()).then(() => {
-      if (!isPaused) {
-        animationFrameRef.current = requestAnimationFrame(animateTraffic);
-      }
-    });
+    if (!isPaused) {
+      animationFrameRef.current = requestAnimationFrame(animateTimeline);
+    }
 
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
-    }
+    };
   }, []);
 
-  const animateTraffic = (timestamp) => {
-    if (previousTimeRef.current != undefined) {
+  const animateTimeline = (timestamp) => {
+    if (previousTimeRef.current != null) {
       const timeDiff = timestamp - previousTimeRef.current;
 
       if (timeDiff > 2000) {
         previousTimeRef.current = timestamp;
-        dispatch(selectNextTraffic());
+        dispatch(selectNextTime());
       }
     } else {
       previousTimeRef.current = timestamp;
     }
 
-    animationFrameRef.current = requestAnimationFrame(animateTraffic);
+    animationFrameRef.current = requestAnimationFrame(animateTimeline);
   };
 
-  const toggleAnimateTraffic = () => {
+  const stopAnimateTimeline = () => {
+    cancelAnimationFrame(animationFrameRef.current);
+    previousTimeRef.current = null;
+
+    setIsPaused(true);
+  };
+
+  const toggleAnimateTimeline = () => {
     if (!isPaused) {
       cancelAnimationFrame(animationFrameRef.current);
+      previousTimeRef.current = null;
     } else {
-      animationFrameRef.current = requestAnimationFrame(animateTraffic);
+      animationFrameRef.current = requestAnimationFrame(animateTimeline);
     }
 
     setIsPaused(!isPaused);
@@ -63,23 +67,23 @@ const Dashboard = () => {
   /**
    * Traffic Selection Functions
    */
-  const dispatchSelectTraffic = (index) => {
-    dispatch(selectTraffic(index));
+  const dispatchSelectTime = (time) => {
+    dispatch(selectTime(time));
   };
-  const debouncedDispatchSelectTraffic = _.debounce((index) => {
-    dispatchSelectTraffic(index);
+  const debouncedDispatchSelectTime = _.debounce((index) => {
+    const time = timestamps[index];
+    dispatchSelectTime(time);
   });
 
-  const dispatchFetchTraffic = (amount, unit) => {
-    setIsPaused(true);
+  const handleDayChange = (amount) => {
+    stopAnimateTimeline();
+    if (amount) {
+      const newTime = moment(timestamps[0]).add(amount, 'days').valueOf();
 
-    let newTimestampFrom;
-    if (amount && unit) {
-      newTimestampFrom = moment(timestampFrom).add(amount, unit).valueOf();
+      if (onDayChanged) {
+        onDayChanged(newTime);
+      }
     }
-    console.log(newTimestampFrom);
-
-    dispatch(fetchTraffic(newTimestampFrom));
   };
 
   /**
@@ -89,31 +93,34 @@ const Dashboard = () => {
     return (
       <div className="dashboard-detail text-sm text-white">
         {
-          (trafficList.length === 0)
-          ? (<h4>No data available for {moment(timestampFrom).format('YYYY/MM/DD')} </h4>)
+          (!selectedTime)
+          ? (<h4>No data available for {moment(timestamps[0]).format('YYYY/MM/DD')} </h4>)
           : (
-            <h4>{ moment(trafficList[selectedTrafficIndex].timestamp).format('YYYY/MM/DD HH:mm') }</h4>
+            <h4>{ moment(selectedTime).format('YYYY/MM/DD HH:mm') }</h4>
           )
         }
       </div>
     );
   };
-  const renderControls = (trafficList) => {
-    const trafficListSize = trafficList.length;
+  const renderControls = () => {
+    let rangeIndex = (timestamps.length)
+      ? timestamps.indexOf(selectedTime)
+      : -1;
+    rangeIndex = Math.max(rangeIndex, 0);
 
     return (
       <div className="dashboard-controls">
         <div className="dashboard__select flex justify-end space-x-2">
           <button
             className="dashboard__previous-unit flex items-center justify-center rounded-md text-sm text-white border border-gray-500 px-4 py-2 hover:bg-primary"
-            disabled={!timestampFrom}
-            onClick={() => dispatchFetchTraffic(-1, 'days')}>
+            disabled={!timestamps[0]}
+            onClick={() => handleDayChange(-1, 'days')}>
             &lt; Previous Day
           </button>
           <button
             className="dashboard__next-unit flex items-center justify-center rounded-md text-sm text-white border border-gray-500 px-4 py-2 hover:bg-primary"
-            disabled={!timestampTo}
-            onClick={() => dispatchFetchTraffic(1, 'days')}>
+            disabled={!timestamps[0]}
+            onClick={() => handleDayChange(1, 'days')}>
             Next Day &gt;
           </button>
         </div>
@@ -121,7 +128,7 @@ const Dashboard = () => {
           <div className="dashboard__timeline-control flex-grow-0">
             <button
               className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white  border border-gray-500 px-2 py-2 hover:bg-primary"
-              onClick={toggleAnimateTraffic}>
+              onClick={toggleAnimateTimeline}>
               <div className="dashboard__timeline-toggle-inner w-6 h-6">
                 {
                   (isPaused)
@@ -132,7 +139,7 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="dashboard__timeline-progress flex flex-grow">
-            <input type="range" min="1" max={trafficListSize} value={selectedTrafficIndex} className="slider w-full align-middle" onChange={e => debouncedDispatchSelectTraffic(e.target.value - 1)}></input>
+            <input type="range" min="0" max={timestamps.length - 1} value={rangeIndex} className="slider w-full align-middle" onChange={e => debouncedDispatchSelectTime(e.target.value)}></input>
           </div>
         </div>
       </div>
@@ -146,7 +153,7 @@ const Dashboard = () => {
     <div className="dashboard absolute inset-x-0 bottom-0 py-16 px-16">
       <div className="z-50 bg-gray-50 bg-opacity-10 rounded w-full py-4 px-4">
         { renderDetail() }
-        { renderControls(trafficList) }
+        { renderControls() }
       </div>
     </div>
   );

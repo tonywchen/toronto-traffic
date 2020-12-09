@@ -14,26 +14,22 @@ const TRAFFIC_COLOUR = (score) => {
 };
 
 const TrafficMap = () => {
-  const trafficList = useSelector(store => store.traffic.trafficList);
-  const selectedTrafficIndex = useSelector(store => store.traffic.selectedTrafficIndex);
+  const trafficByTimestamp = useSelector(store => store.traffic.trafficByTimestamp);
+  const selectedTime = useSelector(store => store.timeline.selected);
 
   const pathMapRef = React.useRef({});
 
   const computeTrafficSnapshots = () => {
-    // const minIndex = Math.max(0, selectedTrafficIndex - 1);
-
-    // return trafficList.slice(selectedTrafficIndex, selectedTrafficIndex + 1);
-    if (trafficList[selectedTrafficIndex]) {
-      return [trafficList[selectedTrafficIndex]];
-    } else {
-      return [];
-    }
+    const traffic = trafficByTimestamp[selectedTime];
+    return (traffic)
+      ? [traffic]
+      : [];
   };
 
   const buildTrafficPaths = (snapshots) => {
     const pathMap = pathMapRef.current;
     Object.values(pathMap).forEach((path) => {
-      path.colour = 'grey';
+      path.colour = 'white';
     });
 
     if (snapshots.length === 0) {
@@ -80,14 +76,13 @@ const TrafficMap = () => {
     });
   };
 
-  if (!Number.isInteger(selectedTrafficIndex)) {
+  if (!Number.isInteger(selectedTime)) {
     return null;
   }
 
   buildTrafficPaths(computeTrafficSnapshots());
 
   return (
-    // renderTrafficSnapshot(computeTrafficSnapshots())
     renderTrafficPaths()
   );
 };

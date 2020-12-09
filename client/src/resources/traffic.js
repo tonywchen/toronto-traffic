@@ -10,14 +10,7 @@ const connect = () => {
 }
 
 export default {
-  fetchTraffic: (from, duration = 60) => {
-    /* console.log(`resources.fetchTraffic: ${from}`);
-    const params = {};
-    if (from) {
-      params.from = from;
-      params.to = from + duration * 60 * 1000;
-    }; */
-
+  fetchTraffic: (from) => {
     const adjustedFrom = moment(from).startOf('day').valueOf();
     const adjustedTo = moment(from).endOf('day').valueOf();
     const params = {
@@ -28,6 +21,5 @@ export default {
     return connect().get(`${SERVER_URL}/traffic`, {
       params
     });
-    // grab traffic from the past hour
   }
 }
