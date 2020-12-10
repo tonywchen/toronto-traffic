@@ -1,5 +1,5 @@
 import moment from 'moment-timezone';
-import { UPDATE_TIMELINE, SELECT_TIME, SELECT_NEXT_TIME } from '../actions/types';
+import { UPDATE_TIMELINE, SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME } from '../actions/types';
 
 const initialState = {
   timestamps: [],
@@ -23,6 +23,8 @@ const computeTimes = (from, to, interval) => {
 }
 
 export default (state = initialState, action) => {
+  let currentIndex;
+
   switch(action.type) {
     case UPDATE_TIMELINE:
       const from = action.payload.from;
@@ -50,7 +52,7 @@ export default (state = initialState, action) => {
       };
     case SELECT_NEXT_TIME:
       let nextSelected;
-      const currentIndex = state.timestamps.indexOf(state.selected);
+      currentIndex = state.timestamps.indexOf(state.selected);
       if (!state.selected || currentIndex < 0) {
         nextSelected = state.timestamps[0];
       } else {
@@ -61,6 +63,20 @@ export default (state = initialState, action) => {
       return {
         ...state,
         selected: nextSelected
+      };
+    case SELECT_PREVIOUS_TIME:
+      let previousSelected;
+      currentIndex = state.timestamps.indexOf(state.selected);
+      if (!state.selected || currentIndex < 0) {
+        previousSelected = state.timestamps[0];
+      } else {
+        const nextIndex = (currentIndex - 1) % state.timestamps.length;
+        previousSelected = state.timestamps[nextIndex];
+      }
+
+      return {
+        ...state,
+        selected: previousSelected
       };
     default:
       return state;

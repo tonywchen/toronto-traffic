@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectTime, selectNextTime } from '../../actions/timeline';
+import { selectNextTime, selectPreviousTime } from '../../actions/timeline';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
+import { ReactComponent as PreviousIcon } from '../icons/previous.svg';
+import { ReactComponent as RewindIcon } from '../icons/rewind.svg';
 import { ReactComponent as PlayIcon } from '../icons/play.svg';
 import { ReactComponent as StopIcon } from '../icons/stop.svg';
+import { ReactComponent as ForwardIcon } from '../icons/forward.svg';
+import { ReactComponent as NextIcon } from '../icons/next.svg';
 
 import Timeline from './timeline/Timeline';
 
@@ -69,13 +73,12 @@ const Dashboard = ({ onDayChanged }) => {
   /**
    * Traffic Selection Functions
    */
-  const dispatchSelectTime = (time) => {
-    dispatch(selectTime(time));
+  const dispatchSelectNextTime = () => {
+    dispatch(selectNextTime());
   };
-  const debouncedDispatchSelectTime = _.debounce((index) => {
-    const time = timestamps[index];
-    dispatchSelectTime(time);
-  });
+  const dispatchSelectPreviousTime = () => {
+    dispatch(selectPreviousTime());
+  };
 
   const handleDayChange = (amount) => {
     stopAnimateTimeline();
@@ -93,14 +96,8 @@ const Dashboard = ({ onDayChanged }) => {
    */
   const renderDetail = () => {
     return (
-      <div className="dashboard-detail text-sm text-white">
-        {
-          (!selectedTime)
-          ? (<h4>No data available for {moment(timestamps[0]).format('YYYY/MM/DD')} </h4>)
-          : (
-            <h4>{ moment(selectedTime).format('YYYY/MM/DD HH:mm') }</h4>
-          )
-        }
+      <div className="dashboard-detail text-lg text-center text-white p-1">
+        <h4>{ moment(timestamps[0]).format('YYYY/MM/DD') }</h4>
       </div>
     );
   };
@@ -111,38 +108,47 @@ const Dashboard = ({ onDayChanged }) => {
     rangeIndex = Math.max(rangeIndex, 0);
 
     return (
-      <div className="dashboard-controls">
-        <div className="dashboard__select flex justify-end space-x-2">
+      <div className="dashboard-controls p-1">
+        <div className="dashboard__select flex justify-center space-x-2">
           <button
-            className="dashboard__previous-unit flex items-center justify-center rounded-md text-sm text-white border border-gray-500 px-4 py-2 hover:bg-primary"
-            disabled={!timestamps[0]}
-            onClick={() => handleDayChange(-1, 'days')}>
-            &lt; Previous Day
+            className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white border border-gray-500 px-2 py-2 hover:bg-primary disabled:opacity-25"
+            onClick={() => { handleDayChange(-1) }}
+            disabled={!isPaused}>
+            <div className="dashboard__timeline-toggle-inner w-6 h-6">
+              <PreviousIcon />
+            </div>
           </button>
           <button
-            className="dashboard__next-unit flex items-center justify-center rounded-md text-sm text-white border border-gray-500 px-4 py-2 hover:bg-primary"
-            disabled={!timestamps[0]}
-            onClick={() => handleDayChange(1, 'days')}>
-            Next Day &gt;
+            className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white border border-gray-500 px-2 py-2 hover:bg-primary disabled:opacity-25"
+            onClick={dispatchSelectPreviousTime}
+            disabled={!isPaused}>
+            <div className="dashboard__timeline-toggle-inner w-6 h-6">
+              <RewindIcon />
+            </div>
           </button>
-        </div>
-        <div className="dashboard__timeline flex space-x-2">
-          <div className="dashboard__timeline-control flex-grow-0">
-            <button
-              className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white  border border-gray-500 px-2 py-2 hover:bg-primary"
-              onClick={toggleAnimateTimeline}>
-              <div className="dashboard__timeline-toggle-inner w-6 h-6">
-                {
-                  (isPaused)
-                  ? <PlayIcon />
-                  : <StopIcon />
-                }
-              </div>
-            </button>
-          </div>
-          <div className="dashboard__timeline-progress flex flex-grow">
-            <input type="range" min="0" max={timestamps.length - 1} value={rangeIndex} className="slider w-full align-middle" onChange={e => debouncedDispatchSelectTime(e.target.value)}></input>
-          </div>
+          <button
+            className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white border border-gray-500 px-2 py-2 hover:bg-primary"
+            onClick={toggleAnimateTimeline}>
+            <div className="dashboard__timeline-toggle-inner w-6 h-6">
+              { (isPaused) ? <PlayIcon /> : <StopIcon /> }
+            </div>
+          </button>
+          <button
+            className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white border border-gray-500 px-2 py-2 hover:bg-primary disabled:opacity-25"
+            onClick={dispatchSelectNextTime}
+            disabled={!isPaused}>
+            <div className="dashboard__timeline-toggle-inner w-6 h-6">
+              <ForwardIcon />
+            </div>
+          </button>
+          <button
+            className="dashboard__timeline-toggle align-middle rounded-md text-sm text-white border border-gray-500 px-2 py-2 hover:bg-primary disabled:opacity-25"
+            onClick={() => { handleDayChange(1) }}
+            disabled={!isPaused}>
+            <div className="dashboard__timeline-toggle-inner w-6 h-6">
+              <NextIcon />
+            </div>
+          </button>
         </div>
       </div>
     );
@@ -152,8 +158,9 @@ const Dashboard = ({ onDayChanged }) => {
    * Render Function
    */
   return (
-    <div className="dashboard absolute inset-x-0 bottom-0 py-16 px-16">
-      <div className="z-50 bg-gray-50 bg-opacity-10 rounded w-full py-4 px-4">
+    <div className="dashboard absolute inset-x-0 bottom-0 py-16 px-16 z-50">
+      <div className="bg-gray-50 bg-opacity-10 rounded-lg w-full py-4 px-4">
+        { renderControls() }
         { renderDetail() }
         <Timeline />
       </div>
