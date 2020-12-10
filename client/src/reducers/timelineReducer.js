@@ -1,7 +1,8 @@
 import moment from 'moment-timezone';
-import { UPDATE_TIMELINE, SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME } from '../actions/types';
+import { REFRESH_TIMELINE, UPDATE_TIMELINE, SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME } from '../actions/types';
 
 const initialState = {
+  loading: false,
   timestamps: [],
   selected: null
 };
@@ -26,6 +27,11 @@ export default (state = initialState, action) => {
   let currentIndex;
 
   switch(action.type) {
+    case REFRESH_TIMELINE:
+      return {
+        ...state,
+        loading: true
+      };
     case UPDATE_TIMELINE:
       const from = action.payload.from;
       const adjustedFrom = moment(from).startOf('day').valueOf();
@@ -34,6 +40,7 @@ export default (state = initialState, action) => {
 
       return {
         ...state,
+        loading: false,
         timestamps: times,
         // TODO: add a way to pre-select a time from `action.payload`
         selected: times[0]

@@ -28,6 +28,7 @@ const getMode = (edit, lookup) => {
 const Playhead = (props) => {
   const timestamps = useSelector(store => store.timeline.timestamps);
   const selectedTime = useSelector(store => store.timeline.selected);
+  const isTimelineLoading = useSelector(store => store.timeline.loading);
 
   const [lookupTime, setLookupTime] = useState(null);
   const [mode, setMode] = useState(MODES.VIEW);
@@ -79,6 +80,7 @@ const Playhead = (props) => {
   };
   const renderSelectedTimeGuide = () => {
     const { style } = computeRenderAttributes(selectedTime);
+    style.width = `${1 / timestamps.length * 100}%`
 
     return (
       <div className="absolute h-8 border-r border-white border-opacity-100" style={style}>
@@ -91,6 +93,8 @@ const Playhead = (props) => {
     }
 
     const { style } = computeRenderAttributes();
+    style.width = `${1 / timestamps.length * 100}%`
+
     const borderColorClass = `border-${COLORS[mode]}`;
 
     return (
@@ -137,8 +141,8 @@ const Playhead = (props) => {
 
   return (
     <div className="timeline-playhead">
-      { renderGuides() }
-      { renderTimes() }
+      { !isTimelineLoading && renderGuides() }
+      { !isTimelineLoading && renderTimes() }
     </div>
   );
 };

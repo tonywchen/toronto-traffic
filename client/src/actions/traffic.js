@@ -1,8 +1,12 @@
-import { FETCH_TRAFFIC, SELECT_TRAFFIC, SELECT_NEXT_TRAFFIC, UPDATE_TIMELINE } from './types';
+import { FETCH_TRAFFIC, UPDATE_TIMELINE, REFRESH_TIMELINE } from './types';
 import resource from '../resources/traffic';
 
 export const fetchTraffic = (from) => {
   return async (dispatch) => {
+    dispatch({
+      type: REFRESH_TIMELINE
+    });
+
     const response = await resource.fetchTraffic(from);
 
     dispatch({

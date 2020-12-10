@@ -5,9 +5,9 @@ import MapMetadata from './MapMetadata';
 import MapContext from '../common/MapContext';
 
 const DEFAULT = {
-  lng: -79.3930,
-  lat: 43.6560,
-  zoom: 12.05
+  lng: -79.39823201128098,
+  lat: 43.6404135590131,
+  zoom: 12.22
 };
 
 const Mapbox = ({ children }) => {
