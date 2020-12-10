@@ -7,6 +7,8 @@ import _ from 'lodash';
 import { ReactComponent as PlayIcon } from '../icons/play.svg';
 import { ReactComponent as StopIcon } from '../icons/stop.svg';
 
+import Timeline from './timeline/Timeline';
+
 const Dashboard = ({ onDayChanged }) => {
   const selectedTime = useSelector(store => store.timeline.selected);
   const timestamps = useSelector(store => store.timeline.timestamps);
@@ -153,7 +155,7 @@ const Dashboard = ({ onDayChanged }) => {
     <div className="dashboard absolute inset-x-0 bottom-0 py-16 px-16">
       <div className="z-50 bg-gray-50 bg-opacity-10 rounded w-full py-4 px-4">
         { renderDetail() }
-        { renderControls() }
+        <Timeline />
       </div>
     </div>
   );
