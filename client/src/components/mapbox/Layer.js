@@ -1,72 +1,76 @@
 import React, { useContext, useEffect } from 'react';
 import MapContext from '../common/MapContext';
 
-const Layer = ({data, id}) => {
+import Feature from './Feature';
+
+const TYPES = {
+  'line': {
+    type: 'line',
+    layout: {
+      'line-join': 'round',
+      'line-cap': 'square'
+    },
+    paint: {
+      'line-color': 'white',
+      'line-width': 3,
+      'line-offset': 1
+    }
+  }
+};
+
+const getTypeData = (type, data) => {
+  let typeData = TYPES[type];
+  if (typeData && data) {
+    typeData.paint['line-color'] = data.lineColor || typeData.paint['line-color'];
+    typeData.paint['line-offset'] = data.lineOffset || typeData.paint['line-offset'];
+  }
+
+  return typeData;
+};
+
+const Layer = ({children, data, id, type, source}) => {
   const map = useContext(MapContext);
 
   useEffect(() => {
     return () => {
       if (map && map.getLayer(id)) {
+        console.log('remove');
         map.removeLayer(id);
-      }
-
-      if (map && map.getSource(id)) {
-        map.removeSource(id);
       }
     };
   }, []);
 
-  const addOrUpdateLayer = (id, layer, sourceData) => {
+  const addOrUpdateLayer = (id, layer) => {
     const existingLayer = map.getLayer(id);
 
     if (existingLayer) {
-      const existingSource = map.getSource(id);
-      existingSource.setData(sourceData);
-
       map.setPaintProperty(id, 'line-color', layer.paint['line-color']);
     } else {
-      const source = {
-        type: 'geojson',
-        data: sourceData
-      };
-      map.addSource(id, source);
       map.addLayer(layer);
     }
   };
 
-  const createLine = (data, id) => {
-    const sourceData = {
-      type: 'Feature',
-      properties: {
-        timestamp: data.timestamp,
-        from: data.from,
-        to: data.to
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: data.legs
-      }
-    };
+  if (map) {
+    let typeData = getTypeData(type, data);
+    if (!typeData) {
+      return null;
+    }
 
     const layer = {
-      id: id,
-      type: 'line',
-      source: id,
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'square'
-      },
-      paint: {
-        'line-color': data.colour,
-        'line-width': 8
-      }
+      id,
+      type,
+      source,
+      layout: typeData.layout,
+      paint: typeData.paint
     };
 
-    addOrUpdateLayer(id, layer, sourceData);
-  };
+    React.Children.forEach(children, (child, index) => {
+      if (child.type === Feature) {
+        child.type(child.props);
+      }
+    });
 
-  if (map) {
-    createLine(data, id);
+    addOrUpdateLayer(id, layer);
   }
 
   return null;

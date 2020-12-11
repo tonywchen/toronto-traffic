@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import Layer from '../mapbox/Layer';
-import moment from 'moment-timezone';
+import Feature from '../mapbox/Feature';
 
 const TRAFFIC_COLOUR = (score) => {
   if (score > 10) {
@@ -29,7 +29,8 @@ const TrafficMap = () => {
   const buildTrafficPaths = (snapshots) => {
     const pathMap = pathMapRef.current;
     Object.values(pathMap).forEach((path) => {
-      path.colour = 'white';
+      path.layerData = path.layerData || {};
+      path.layerData.lineColor = 'white';
     });
 
     if (snapshots.length === 0) {
@@ -43,36 +44,49 @@ const TrafficMap = () => {
         const legs = datum.path.legs;
         const average = datum.average;
         const colour = TRAFFIC_COLOUR(average);
-        const pathData = {
-          legs,
+
+        const layerData = {
           colour,
-          opacity,
-          from: datum.path.from,
-          to: datum.path.to,
-          timestamp: snapshot.timestamp
+          opacity
+        };
+        const sourceData = {
+          legs,
+          attributes: {
+            from: datum.path.from,
+            to: datum.path.to,
+            timestamp: snapshot.timestamp
+          }
         };
 
         const pathId = `${datum.path.from}_${datum.path.to}`;
-        pathMap[pathId] = pathMap[pathId] || pathData;
-        pathMap[pathId] = {
-          ...pathMap[pathId],
-          colour: pathData.colour,
-          opacity: pathData.opacity,
-          timestamp: pathData.timestamp
+        pathMap[pathId] = pathMap[pathId] || {
+          layerData,
+          sourceData
+        }
+
+        pathMap[pathId].layerData = {
+          ...layerData,
+          lineColor: colour,
+          lineOffset: 8,
+          opacity
+        };
+        pathMap[pathId].sourceData = {
+          ...sourceData,
+          timestamp: snapshot.timestamp
         };
       });
-    });
-
-    Object.keys(pathMap).forEach((pathId) => {
-      const pathData = pathMap[pathId];
     });
   };
 
   const renderTrafficPaths = () => {
     const pathMap = pathMapRef.current;
     return Object.keys(pathMap).map((pathId) => {
-      const pathData = pathMap[pathId];
-      return <Layer type="lineString" data={pathData} id={pathId} key={pathId} />;
+      const { layerData, sourceData } = pathMap[pathId];
+      return (
+        <Layer type="line" data={layerData} id={pathId} source={pathId} key={pathId} >
+          <Feature data={sourceData} id={pathId} type="LineString"/>
+        </Layer>
+      )
     });
   };
 
