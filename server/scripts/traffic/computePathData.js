@@ -65,16 +65,16 @@ const Compute = (debug = false) => {
           };
 
           const path = {
-            from: stopTag,
-            to: lastStopTag,
+            from: lastStopTag,
+            to: stopTag,
             pathStatus: pathStatus
           };
-          const pathIdentifier = `${stopTag}---${lastStopTag}`;
+          const pathIdentifier = `${lastStopTag}---${stopTag}`;
 
           pathMap[pathIdentifier] = path;
 
-          stopMap[stopTag] = 1;
           stopMap[lastStopTag] = 1;
+          stopMap[stopTag] = 1;
         }
       });
     });
