@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import MapContext from '../common/MapContext';
 
-const Feature = ({data, id, type}) => {
+const Feature = ({children, data, id, type}) => {
   const map = useContext(MapContext);
   useEffect(() => {
     return () => {
@@ -11,7 +11,7 @@ const Feature = ({data, id, type}) => {
     };
   }, []);
 
-  if (!(map && data && id && type)) {
+  if (!(map && id && type)) {
     return null;
   }
 
@@ -30,22 +30,50 @@ const Feature = ({data, id, type}) => {
     }
   };
 
-  const createLine = (data, id, type) => {
-    const sourceData = {
+  const createFeature = (data, id, type) => {
+    switch (type) {
+      case 'LineString':
+        return createLine(data, id)
+      case 'FeatureCollection':
+        return createCollection(data, id, type);
+    }
+
+    return null;
+  };
+
+  const createLine = (data, id) => {
+    return {
       type: 'Feature',
       properties: {
         ...data.attributes
       },
       geometry: {
-        type: type,
-        coordinates: data.legs
+        type: 'LineString',
+        coordinates: data.legs || []
       }
     };
-
-    addOrUpdateSource(id, sourceData);
   };
 
-  createLine(data, id, type);
+  const createCollection = (data, id) => {
+    const sourceData = {
+      type: 'FeatureCollection',
+      features: []
+    };
+
+    React.Children.forEach(children, (child) => {
+      const feature = createFeature(child.props.data, child.props.id, child.props.type);
+      if (feature) {
+        sourceData.features.push(feature);
+      }
+    });
+
+    console.log(sourceData);
+
+    return sourceData;
+  };
+
+  const sourceData = createFeature(data, id, type);
+  addOrUpdateSource(id, sourceData);
 
   return null;
 };

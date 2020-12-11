@@ -64,7 +64,7 @@ const Layer = ({children, data, id, type, source}) => {
       paint: typeData.paint
     };
 
-    React.Children.forEach(children, (child, index) => {
+    React.Children.forEach(children, (child) => {
       if (child.type === Feature) {
         child.type(child.props);
       }
