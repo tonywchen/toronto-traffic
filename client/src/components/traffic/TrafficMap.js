@@ -67,7 +67,8 @@ const TrafficMap = () => {
         pathMap[pathId].layerData = {
           ...layerData,
           lineColor: colour,
-          lineOffset: 8,
+          lineWidth: 3,
+          lineOffset: 5,
           opacity
         };
         pathMap[pathId].sourceData = {

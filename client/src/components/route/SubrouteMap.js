@@ -8,12 +8,13 @@ const SubrouteMap = () => {
   const subroutes = useSelector(store => store.route.subroutes);
 
   const layerData = {
-    lineColor: "white",
+    lineColor: "grey",
     lineWidth: 5,
-    lineOffset: 0
+    lineOffset: 5
   };
 
-  console.log(`subroutes: ${subroutes.length}`);
+  // const filtered = subroutes.filter((s) => s.title.substring(0, 4) === 'East');
+  // console.log(`subroutes: ${filtered.length}`);
 
   return (
     <Layer type="line" data={layerData} id="subroute" source="subroute" key="subroute" >

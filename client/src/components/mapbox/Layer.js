@@ -12,17 +12,36 @@ const TYPES = {
     },
     paint: {
       'line-color': 'white',
-      'line-width': 3,
-      'line-offset': 1
+      'line-width': 1,
+      'line-offset': 0
     }
   }
 };
 
 const getTypeData = (type, data) => {
-  let typeData = TYPES[type];
+  let typeData = null;
+
+  switch (type) {
+    case 'line':
+      typeData = {
+        type: 'line',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'square'
+        },
+        paint: {
+          'line-color': 'white',
+          'line-width': 1,
+          'line-offset': 0
+        }
+      }
+      break;
+  }
+
   if (typeData && data) {
     typeData.paint['line-color'] = data.lineColor || typeData.paint['line-color'];
     typeData.paint['line-offset'] = data.lineOffset || typeData.paint['line-offset'];
+    typeData.paint['line-width'] = data.lineWidth || typeData.paint['line-width'];
   }
 
   return typeData;
