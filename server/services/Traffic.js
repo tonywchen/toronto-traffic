@@ -90,7 +90,6 @@ class TrafficService {
         'timestamp': 1
       }
     }];
-    console.log(JSON.stringify(pathStatusPipeline));
 
     const recentPathStatuses = await PathStatus.aggregate(pathStatusPipeline);
     return {

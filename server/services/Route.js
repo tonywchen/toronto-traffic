@@ -1,6 +1,14 @@
 const Subroute = require('../models/nextbus/Subroute')
 const Path = require('../models/traffic/Path');
 
+const areLegsSame = (leg1, leg2) => {
+  if (!leg1 || !leg2) {
+    return false;
+  }
+
+  return (leg1[0] === leg2[0] && leg1[1] === leg2[1]);
+};
+
 class RouteService {
   constructor() { }
 
@@ -22,6 +30,7 @@ class RouteService {
     const subroutes = await Subroute.find().lean();
     const results = subroutes.map((subroute) => {
       const allLegs = [];
+      let lastLeg = null;
       subroute.stops.forEach((stop, stopIndex) => {
         if (stopIndex >= subroute.stops.length - 1) {
           return;
@@ -38,9 +47,11 @@ class RouteService {
         }
 
         let legs = routePath.legs || [];
-        if (stopIndex > 0) {
-          legs.shift()
+        let hasDuplicatedLegs = areLegsSame(lastLeg, legs[0]);
+        if (hasDuplicatedLegs) {
+          legs.shift();
         }
+        lastLeg = legs[0];
 
         allLegs.push(...legs);
       });
