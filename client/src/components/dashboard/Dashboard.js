@@ -29,7 +29,6 @@ const SPEED = {
 };
 
 const Dashboard = ({ onDayChanged }) => {
-  const selectedTime = useSelector(store => store.timeline.selected);
   const timestamps = useSelector(store => store.timeline.timestamps);
 
   const dispatch = useDispatch();
@@ -37,27 +36,29 @@ const Dashboard = ({ onDayChanged }) => {
   const animationFrameRef = React.useRef(null);
   const previousTimeRef = React.useRef(null);
 
-  const [isPaused, setIsPaused] = React.useState(true);
+  const [isPaused, setPaused] = React.useState(true);
   const [animationSpeed, setAnimationSpeed] = React.useState(SPEED.NORMAL.value);
 
   /**
    * Animation Control Functions
    */
   useEffect(() => {
-    cancelAnimationFrame(animationFrameRef.current);
-    if (!isPaused) {
-        animationFrameRef.current = requestAnimationFrame(animateTimeline);
-    }
-
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [animationSpeed, isPaused]);
+  }, []);
 
   const animateTimeline = (timestamp) => {
     if (previousTimeRef.current != null) {
       const timeDiff = timestamp - previousTimeRef.current;
-      if (timeDiff > animationSpeed) {
+
+      let currentAnimationSpeed;
+      setAnimationSpeed((currentValue) => {
+        currentAnimationSpeed = currentValue;
+        return currentValue;
+      });
+
+      if (timeDiff > currentAnimationSpeed) {
         previousTimeRef.current = timestamp;
         dispatch(selectNextTime());
       }
@@ -69,21 +70,21 @@ const Dashboard = ({ onDayChanged }) => {
   };
 
   const stopAnimateTimeline = () => {
-    cancelAnimationFrame(animationFrameRef.current);
     previousTimeRef.current = null;
 
-    setIsPaused(true);
+    setPaused(true);
   };
 
   const toggleAnimateTimeline = () => {
-    if (!isPaused) {
+    const newValue = !isPaused;
+    setPaused(newValue);
+
+    if (newValue) {
       cancelAnimationFrame(animationFrameRef.current);
       previousTimeRef.current = null;
     } else {
       animationFrameRef.current = requestAnimationFrame(animateTimeline);
     }
-
-    setIsPaused(!isPaused);
   };
 
   /**
@@ -113,7 +114,7 @@ const Dashboard = ({ onDayChanged }) => {
   const renderDetail = () => {
     return (
       <div className="dashboard-detail text-lg text-center text-white p-1">
-        <h4>{ moment(timestamps[0]).format('YYYY/MM/DD') }</h4>
+        <h4>{moment(timestamps[0]).format('YYYY/MM/DD')}</h4>
       </div>
     );
   };
@@ -143,7 +144,7 @@ const Dashboard = ({ onDayChanged }) => {
               className="dashboard__timeline-toggle align-middle rounded-md text-sm text-gray-300 border border-gray-500 px-2 py-2 hover:bg-primary"
               onClick={toggleAnimateTimeline}>
               <div className="dashboard__timeline-toggle-inner w-6 h-6">
-                { (isPaused) ? <PlayIcon /> : <StopIcon /> }
+                {(isPaused) ? <PlayIcon /> : <StopIcon />}
               </div>
             </button>
             <button
@@ -169,8 +170,8 @@ const Dashboard = ({ onDayChanged }) => {
             {
               !isPaused &&
               [SPEED.FAST, SPEED.NORMAL, SPEED.SLOW].map((speed) => {
-                const bgColorClass = (speed.value === animationSpeed)? 'bg-primary' : '';
-                const textClass = (speed.value === animationSpeed)? 'text-xs text-white font-bold' : 'text-xs text-gray-300';
+                const bgColorClass = (speed.value === animationSpeed) ? 'bg-primary' : '';
+                const textClass = (speed.value === animationSpeed) ? 'text-xs text-white font-bold' : 'text-xs text-gray-300';
 
                 return (
                   <button
@@ -195,8 +196,8 @@ const Dashboard = ({ onDayChanged }) => {
   return (
     <div className="dashboard absolute inset-x-0 bottom-0 py-16 px-16 z-50">
       <div className="bg-black bg-opacity-75 rounded-lg w-full py-4 px-4">
-        { renderControls() }
-        { renderDetail() }
+        {renderControls()}
+        {renderDetail()}
         <Timeline />
       </div>
     </div>
