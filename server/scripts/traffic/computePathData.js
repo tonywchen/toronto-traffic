@@ -8,10 +8,14 @@ const PathStatus = require('../../models/traffic/PathStatus');
 const mbxClient = require('@mapbox/mapbox-sdk');
 const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
 
+const polyline = require('@mapbox/polyline');
+
 const tokens = require('../configs/tokens.json');
 const SystemSetting = require('../../models/SystemSetting');
 const baseClient = mbxClient({ accessToken: tokens.mapbox });
-const directionsService = mbxDirections(baseClient);
+
+const GoogleMaps = require("@googlemaps/google-maps-services-js");
+const GoogleMapsClient = GoogleMaps.Client;
 
 const mapObject = (obj, mapFn) => {
   const newObj = {};
@@ -24,6 +28,7 @@ const mapObject = (obj, mapFn) => {
 };
 
 const Compute = (debug = false) => {
+  const googleMapsClient = new GoogleMapsClient({});
 
   const trafficToPathData = async (traffic) => {
     const pathMap = {};
@@ -31,13 +36,13 @@ const Compute = (debug = false) => {
 
     Object.keys(traffic).forEach((stopTag) => {
       const trips = traffic[stopTag].trips;
-      Object.keys(trips).forEach((tripTag) => {
+      Object.keys(trips).forEach((previousStopTag) => {
         if (!trips) {
           return;
         }
 
-        const trip = trips[tripTag];
-        const {lastStopTag, timestamp, interval, diff, count} = trip;
+        const trip = trips[previousStopTag];
+        const {timestamp, interval, diff, count} = trip;
 
         const localMoment = moment(timestamp).tz('America/Toronto');
         const localDateTime = {
@@ -49,7 +54,7 @@ const Compute = (debug = false) => {
           minute: localMoment.minute()
         };
 
-        if (lastStopTag) {
+        if (previousStopTag) {
           const pathStatus = {
             timestamp,
             interval,
@@ -65,15 +70,15 @@ const Compute = (debug = false) => {
           };
 
           const path = {
-            from: lastStopTag,
+            from: previousStopTag,
             to: stopTag,
             pathStatus: pathStatus
           };
-          const pathIdentifier = `${lastStopTag}---${stopTag}`;
+          const pathIdentifier = `${previousStopTag}---${stopTag}`;
 
           pathMap[pathIdentifier] = path;
 
-          stopMap[lastStopTag] = 1;
+          stopMap[previousStopTag] = 1;
           stopMap[stopTag] = 1;
         }
       });
@@ -116,7 +121,7 @@ const Compute = (debug = false) => {
           to,
           paths: []
         };
-        pathData[identifier].paths.push(path)
+        pathData[identifier].paths.push(path);
       }
     }
 
@@ -129,6 +134,11 @@ const Compute = (debug = false) => {
 
       if (!isPathDatumFound) {
         await populatePathDatum(pathDatum, stopData);
+      } else {
+        // indicate the path is still active after changes to
+        // new computing algorithm version
+        const { _id } = pathDatum.obj;
+        await Path.findOneAndUpdate({_id}, {});
       }
     }
   }
@@ -275,6 +285,7 @@ const computePathData = async (trafficGroups, maxTimestamp, debug = false) => {
 
   const stopData = await compute.findStopData(stopTags);
   const pathData = await compute.preparePathData(allPaths);
+
   await compute.findOrPopulatePaths(pathData, stopData);
   await compute.savePathStatuses(pathData);
 

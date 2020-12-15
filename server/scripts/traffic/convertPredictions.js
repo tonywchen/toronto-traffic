@@ -1,13 +1,18 @@
-const { MongoClient } = require('mongodb');
-const { performance } = require('perf_hooks');
+const _ = require('lodash');
+const mongoose = require('mongoose');
 
 const Trip = require('../../models/nextbus/Trip');
-const Subroute = require('../../models/nextbus/Subroute');
 const SystemSetting = require('../../models/SystemSetting');
 
-const dirTagRegex = new RegExp('[0-9]{1,3}_[0-1]_');
 const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * This script computes traffic data by taking prediction data in
+ * time batches defined by `DEFAULT_TIME_RANGE` (ie. 5-minute
+ * batches). This function returns the end time of the most
+ * recent complete batch so the rest of the script can use
+ * the return value to limit the prediction data query.
+ */
 const findRecentCompleteTimestamp = async () => {
   const result = await Trip.findOne().sort('-timestamp');
 
@@ -19,6 +24,174 @@ const findRecentCompleteTimestamp = async () => {
 
   return 0;
 };
+
+/**
+ * This function iterates through trips and populates `nextStopTags`,
+ * an array of stop tags representing an ordered list of the subsequent
+ * stops for this trip. This array value is calculated using the
+ * `predictions` data from the trip. `nextStopTags` will help determine
+ * which stop a vehicle is coming from for a specific trip at a specific
+ * time (see `populatePreviousStops` for more detail)
+ * @param {*} lastProcessed
+ * @param {*} maxTimestamp
+ * @param {*} routeTag
+ */
+const populateNextStopTags = async (lastProcessed, maxTimestamp, routeTag) => {
+  const unprocessedTrips = await Trip.find({
+    'timestamp': {
+      '$gte': lastProcessed,
+      '$lt': maxTimestamp
+    },
+    'routeTag': routeTag,
+    'nextStopTags': {
+      '$exists': false
+    }
+  });
+
+  let count = 1;
+  for (const unprocessedTrip of unprocessedTrips) {
+    const predictions = unprocessedTrip.get('predictions');
+
+    let nextStopTags = _.chain(Object.values(predictions))
+      .sortBy(({seconds}) => parseInt(seconds))
+      .map('stopTag')
+      .value();
+
+    unprocessedTrip.set('nextStopTags', nextStopTags);
+    await unprocessedTrip.save();
+
+    console.log(`${count++} of ${unprocessedTrips.length} saved!`);
+  }
+};
+
+/**
+ * This function calculates which stop (ie. `previousStopTag`) a vehicle
+ * is coming from for each specific trip at a specific timestamp by looking
+ * at the historical data for a specific trip. This information will help
+ * determine the road path this eventual traffic data will map to.
+ *
+ * This step is necessary because the route info provided by NextBus/TTC
+ * is incomplete and it was impossible to determine the list of stops a
+ * trip goes through for many instances (eg. 504 Westbound route information
+ * was mostly missing). This also helps in the cases where there might be a
+ * sudden route change (eg. diversion, short turn) where it is only possible
+ * to determine the paths a vehicle takes by looking at real data.
+ * @param {*} lastProcessed the lower bound of the timestamp for the query
+ * @param {*} maxTimestamp the upper bound of the timestamp for the query
+ * @param {*} routeTag the route whose trips to populate
+ */
+const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
+  const tripTags = await Trip.distinct('tripTag', {
+    'timestamp': {
+      '$gte': lastProcessed,
+      '$lt': maxTimestamp
+    },
+    'routeTag': routeTag,
+    'nextStopTags': {
+      '$exists': true
+    },
+    'previousStopTag': {
+      '$exists': false
+    }
+  });
+
+  const pipeline = [{
+    '$match': {
+      'tripTag': {
+        '$in': tripTags
+      },
+      'timestamp': {
+        '$lt': maxTimestamp
+      },
+    }
+  }, {
+    '$sort': {
+      'timestamp': 1
+    }
+  }, {
+    '$group': {
+      '_id': '$tripTag',
+      'trips': {
+        '$push': '$$ROOT'
+      }
+    }
+  }, {
+    '$project': {
+      'tripTag': '$_id',
+      'trips': '$trips'
+    }
+  }];
+
+  let count = 1;
+  const cursor = await Trip.aggregate(pipeline).allowDiskUse(true);
+  for (const result of cursor) {
+    const last = {
+      nextStopTags: [],
+      previousStopTag: '',
+      timestamp: 0
+    };
+
+    for (const trip of result.trips) {
+      let timestamp = trip.timestamp;
+      let nextStopTags = trip.nextStopTags || [];
+      let previousStopTag = last.previousStopTag;
+
+      if (last.nextStopTags.length !== 0 && (last.nextStopTags[0] != nextStopTags[0])) {
+        const previousStopTagIndex = last.nextStopTags.indexOf(nextStopTags[0]);
+        if (previousStopTagIndex > 0) {
+          previousStopTag = last.nextStopTags[previousStopTagIndex - 1];
+        }
+      }
+
+      // A 'trip' has been assumed to be the journey a vehicle takes to go between
+      // two terminal stations. However, it has been observed not to be the case
+      // and serveral common scenarios have been found to contradict this definition:
+      // - Sudden scheduling change: A vehicle might jump to a distant stop in the
+      // direction that is either same or opposite from the current direction. This
+      // is most likely due to sudden route diversion, short-turns, or re-assignment
+      // of the vehicle schedule.
+      // - Rolling tripTag: A tripTag might stay the same after the vehicle has reached
+      // the terminal station and is going back in the opposite direction.
+      //
+      // To fix these unexpected behaviour, a few checks are implemented to detect the
+      // scenarios above. If so, assume the particular segment of the trip does not
+      // have a previous stop (effectily starting a new "sub-trip")
+
+      // Scenario 1:
+      // When there is a sudden scheduling change, the trip tends to disappear from
+      // all predictions for an extended period of time. It is reasonable to assume
+      // if the trip disappeared for more than the polling interval (DEFAULT_TIME_RANGE)
+      // of the script, it most likely has had a scheduling change.
+      const hasDisappeared = (timestamp - last.timestamp > DEFAULT_TIME_RANGE);
+
+      // Scenario 2:
+      // A trip sometimes can loop back (eg. the next stops go from [10, 11, 12] to
+      // [8, 9, 10]). We can check if the first of the next stops suddenly
+      // go back in the queue.
+      let isLoopedBack = false;
+      const lastNextStopTag = last.nextStopTags[0] || '';
+      const lastNextStopTagCurrentIndex = nextStopTags.indexOf(lastNextStopTag);
+      if (lastNextStopTagCurrentIndex > 0) {
+        isLoopedBack = true
+      }
+
+      if (hasDisappeared || isLoopedBack) {
+        previousStopTag = '';
+      }
+
+      await Trip.findByIdAndUpdate(mongoose.Types.ObjectId(trip._id), {
+        previousStopTag
+      });
+
+      last.nextStopTags = nextStopTags;
+      last.previousStopTag = previousStopTag;
+      last.timestamp = timestamp;
+    }
+
+    console.log(`[populatePreviousStops] ${count++} of ${cursor.length} trips saved!`);
+  }
+};
+
 
 // TODO: find a way to avoid/reduce `allowDiskUse`
 const findRecentTripIntervals = async (lastProcessed, maxTimestamp, routeTag) => {
@@ -89,19 +262,23 @@ const flattenTripsToPredictions = (trips, interval) => {
  * @param {*} trip
  */
 const tripToPredictions = (trip, interval) => {
-  const { tripTag, routeTag, routeTitle, dirTag, branch, timestamp } = trip;
+  const { tripTag, routeTag, routeTitle, dirTag, branch, timestamp, previousStopTag, nextStopTags } = trip;
   const predictions = Object.keys(trip.predictions).map((key) => {
     const prediction = trip.predictions[key];
+    const seconds = parseInt(prediction.seconds);
 
     return {
       ...prediction,
+      seconds,
       tripTag,
       routeTag,
       routeTitle,
       dirTag,
       branch,
       timestamp,
-      interval
+      interval,
+      previousStopTag,
+      nextStopTags
     };
   });
 
@@ -159,7 +336,7 @@ const groupPredictionsByStops = (predictions) => {
  * @param {*} stops
  * @param {*} tripLocations
  */
-const computeTrafficByStop = (stops, tripLocations) => {
+const computeTrafficByStop = (stops) => {
   const trafficMap = {};
 
   Object.keys(stops).forEach((key) => {
@@ -175,12 +352,10 @@ const computeTrafficByStop = (stops, tripLocations) => {
     let previousTimingMap = {};
     let stopTripMap = {};
     stop.predictions.forEach((prediction) => {
-      const { tripTag, dirTag } = prediction;
+      const { tripTag, dirTag, previousStopTag, nextStopTags } = prediction;
+      const isTripAtStop = (nextStopTags)? stop.stopTag === nextStopTags[0] : false;
+
       const previousTiming = previousTimingMap[tripTag];
-
-      const tripStopLocation = tripLocations[prediction.timestamp][tripTag];
-      const isTripAtStop = tripStopLocation.stopTag === stop.stopTag;
-
       if (previousTiming) {
         prediction.last = { ...previousTiming }
 
@@ -194,7 +369,7 @@ const computeTrafficByStop = (stops, tripLocations) => {
         prediction.change = change;
 
         if (isTripAtStop) {
-          stopTripMap[tripTag] = stopTripMap[tripTag] || {
+          stopTripMap[previousStopTag] = stopTripMap[previousStopTag] || {
             diff: 0,
             count: 0,
             timestamp: prediction.timestamp,
@@ -202,13 +377,13 @@ const computeTrafficByStop = (stops, tripLocations) => {
             directions: {}  // theoretically only trip-direction is a 1-to-1 mapping, but setting this to array to observe all possible values
           };
 
-          stopTripMap[tripTag].diff += change.diff;
-          stopTripMap[tripTag].count++;
+          stopTripMap[previousStopTag].diff += change.diff;
+          stopTripMap[previousStopTag].count++;
 
-          stopTripMap[tripTag].directions[dirTag] = stopTripMap[tripTag].directions[dirTag] || 0;
-          stopTripMap[tripTag].directions[dirTag]++;
+          stopTripMap[previousStopTag].directions[dirTag] = stopTripMap[previousStopTag].directions[dirTag] || 0;
+          stopTripMap[previousStopTag].directions[dirTag]++;
 
-          stopTripMap[tripTag].hasMultipleDirections = Object.keys(stopTripMap[tripTag].directions).length > 1;
+          stopTripMap[previousStopTag].hasMultipleDirections = Object.keys(stopTripMap[previousStopTag].directions).length > 1;
         }
       } else {
         prediction.change = { isFirst: true };
@@ -230,154 +405,23 @@ const computeTrafficByStop = (stops, tripLocations) => {
   return trafficMap;
 };
 
-/**
- * This function looks at all predictions and figures out the vehicle
- * locations at each reported time. This groups all predictions by
- * the report time, and for each report time group, find the stop that
- * has the lowest `seconds` till arrival at the stop.
- * @param {*} predictions
- */
-const getCurrentTripLocations = (predictions) => {
-  const predictionsByTimestamps = predictions.reduce((acc, prediction) => {
-    const { timestamp } = prediction;
-    acc[timestamp] = acc[timestamp] || {
-      timestamp: timestamp,
-      predictions: []
-    };
-
-    acc[timestamp].predictions.push(prediction);
-
-    return acc;
-  }, {});
-
-  const tripLocationsByTimestamp = {};
-
-  Object.keys(predictionsByTimestamps).forEach((timestamp) => {
-    let tripLocations = {};
-
-    const predictions = predictionsByTimestamps[timestamp].predictions;
-    predictions.forEach((prediction) => {
-      const { seconds, stopTag, tripTag } = prediction;
-      tripLocations[tripTag] = tripLocations[tripTag] || {
-        seconds,
-        stopTag
-      };
-
-      if (seconds < tripLocations[tripTag].seconds) {
-        tripLocations[tripTag] = {
-          seconds,
-          stopTag
-        }
-      }
-    });
-
-    tripLocationsByTimestamp[timestamp] = tripLocations;
-  });
-
-  return tripLocationsByTimestamp;
-};
-
-const findSubroutes = async (routeTag) => {
-  const query = {routeTag};
-
-  const subroutes = [];
-  const documents = await Subroute.find(query);
-  for (const document of documents) {
-    subroutes.push(document.toObject());
-  };
-
-  return subroutes;
-};
-
-const matchTrafficToDirections = (traffic, subrouteData) => {
-  // TODO: optimize the algorithm to use fewer nestings
-  Object.keys(traffic).forEach((stopTag) => {
-    const trips = traffic[stopTag].trips;
-    Object.keys(trips).forEach((tripTag) => {
-      const trip = trips[tripTag];
-      const dirTag = Object.keys(trip.directions)[0];
-
-      const lastStop = findLastStop(dirTag, stopTag, subrouteData);
-      if (lastStop) {
-        trip.lastStopTag = lastStop.tag;
-      }
-    });
-  });
-};
-
-const findLastStop = (dirTag, stopTag, subrouteData) => {
-  let fullMatch, partialMatch;
-  for (const subrouteDatum of subrouteData) {
-    if (!subrouteDatum.tag || !dirTag) {
-      continue;
-    }
-
-    if (subrouteDatum.tag === dirTag) {
-      fullMatch = subrouteDatum;
-    }
-
-    // By observation, the `dirTag` used by TTC has a format of
-    // `{route}_{direction}_{branch}` where:
-    // - `route`: Route number of the vehicle (eg. 6, 72, 504)
-    // - `direction`: either 0 or 1 denoting westbound/eastbound or
-    // southbound/northbound
-    // - `branch`: usually the route number followed by an internal
-    // unique identifier
-    //
-    // There are many instances where the `dirTag` from a trip does not
-    // match existing definitions. Possibly because if a trip has
-    // to make a detour or short-turn, a non-predefined `branch` value
-    // seems to be assigned to the `dirTag` of the trip.
-    //
-    // To workaround it, only match the `route` and `direction`
-    const datumResults = dirTagRegex.exec(subrouteDatum);
-    const valueResults = dirTagRegex.exec(dirTag);
-
-    if (datumResults && valueResults && datumResults[0] === valueResults[0]) {
-      partialMatch = subrouteDatum;
-    }
-  }
-
-  const matchedSubroute = fullMatch || partialMatch;
-
-  if (matchedSubroute) {
-    const foundStopIndex = matchedSubroute.stops.findIndex((stop, i) => {
-      return stop.tag === stopTag;
-    });
-
-    if (foundStopIndex > 0) {
-      return matchedSubroute.stops[foundStopIndex - 1];
-    }
-  }
-};
-
-const findMostRecentTripTimestamp = (tripIntervals) => {
-  let mostRecent = 0;
-  for (const {lastTimestamp} of tripIntervals) {
-    mostRecent = Math.max(mostRecent, lastTimestamp);
-  }
-
-  return mostRecent;
-}
-
 const convertPredictions = async (routeTag) => {
   if (!routeTag) {
     return;
   }
   const lastProcessed = await SystemSetting.findLastProcessed();
   const maxTimestamp = await findRecentCompleteTimestamp();
-  const tripIntervals = await findRecentTripIntervals(lastProcessed, maxTimestamp, routeTag);
 
+  await populateNextStopTags(lastProcessed, maxTimestamp, routeTag);
+  await populatePreviousStops(lastProcessed, maxTimestamp, routeTag);
+
+  const tripIntervals = await findRecentTripIntervals(lastProcessed, maxTimestamp, routeTag);
   const trafficGroups = [];
   for (const { interval, trips } of tripIntervals) {
     const predictions = flattenTripsToPredictions(trips, interval);
     const predictionsByStop = groupPredictionsByStops(predictions);
-    const currentTripLocations = getCurrentTripLocations(predictions);
 
-    const traffic = computeTrafficByStop(predictionsByStop, currentTripLocations);
-    const subroutes = await findSubroutes();
-
-    matchTrafficToDirections(traffic, subroutes);
+    const traffic = computeTrafficByStop(predictionsByStop);
 
     trafficGroups.push(traffic);
   }

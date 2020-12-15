@@ -29,7 +29,9 @@ const Trip = mongoose.model('Trip', {
     type: Map,
     of: SimplePredictionSchema
   } */
-  predictions: Schema.Types.Mixed
+  predictions: Schema.Types.Mixed,
+  nextStopTags: Array,
+  previousStopTag: String
 });
 
 module.exports = Trip;

@@ -15,8 +15,6 @@ SystemSettingSchema.statics.findLastProcessed = async function () {
     key: ATTRIBUTES.LAST_PROCESSED
   });
 
-  console.log(lastProcessedEntry.get('value'));
-
   return (lastProcessedEntry && lastProcessedEntry.value)
     ? lastProcessedEntry.value
     : 0

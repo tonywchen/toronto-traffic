@@ -1,7 +1,9 @@
 
 
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
+const VERSION = '2.0';
 /**
  * Path
  *
@@ -12,11 +14,28 @@ const mongoose = require('mongoose');
  * info Mapbox Direction API and store the results as `legs` for later uses.
  */
 
-const Path = mongoose.model('Path', {
+const pathSchema = new Schema({
   from: String, // stop tag of the from stop
   to: String, // stop tag of the to stop
   legs: Array, // Array of coordinates [longitudes, latitudes],
-  polyline: String
+  polyline: String,
+  lastUpdated: Number,
+  version: String
 });
+
+const preSaveOrUpdateFn = function (next) {
+  this.set({
+    version: VERSION,
+    lastUpdated: new Date().valueOf()
+  });
+  next();
+};
+
+pathSchema.pre('save', preSaveOrUpdateFn);
+pathSchema.pre('update', preSaveOrUpdateFn);
+pathSchema.pre('updateOne', preSaveOrUpdateFn);
+pathSchema.pre('findOneAndUpdate', preSaveOrUpdateFn);
+
+const Path = mongoose.model('Path', pathSchema);
 
 module.exports = Path;

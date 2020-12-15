@@ -34,8 +34,7 @@ const fetchTrips = async (job) => {
 
     tripSize++;
   };
-  console.log(`[${new Date()}] - ${tripSize} trips`);
-
+t
   const vehicles = await nextbusService.fetchVehicles(routeTag);
   for (const vehicle of vehicles) {
     const vehicleObj = new Vehicle({
