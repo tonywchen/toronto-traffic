@@ -8,6 +8,7 @@ router.get('/subroutes', async (req, res) => {
     const result = await RouteServiceInstance.getSubroutes();
     res.send(result);
   } catch (e) {
+    console.error(e.stack);
     res.status(400).send({ error: e.message });
   }
 });

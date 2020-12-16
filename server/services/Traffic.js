@@ -1,3 +1,4 @@
+const Path = require('../models/traffic/Path');
 const PathStatus = require('../models/traffic/PathStatus');
 
 const ROUND_DOWN = 0;
@@ -38,6 +39,24 @@ const validateTimeRange = (from, to) => {
 class TrafficService {
   constructor() {
 
+  }
+
+  async getPaths() {
+    const pathDocs = await Path.find({
+      version: Path.VERSION
+    });
+
+    const paths = pathDocs.map((pathDoc) => {
+      return {
+        from: pathDoc.from,
+        to: pathDoc.to,
+        legs: pathDoc.legs
+      };
+    });
+
+    return {
+      paths
+    };
   }
 
   async searchBetween(from, to) {
