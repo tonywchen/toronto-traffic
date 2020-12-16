@@ -1,10 +1,12 @@
 import moment from 'moment-timezone';
-import { REFRESH_TIMELINE, UPDATE_TIMELINE, SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME } from '../actions/types';
+import _ from 'lodash';
+import { REFRESH_TIMELINE, UPDATE_TIMELINE, SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME, SET_TIMELINE_PREVIEW } from '../actions/types';
 
 const initialState = {
   loading: false,
   timestamps: [],
-  selected: null
+  selected: null,
+  preview: {}
 };
 
 const computeTimes = (from, to, interval) => {
@@ -43,13 +45,14 @@ export default (state = initialState, action) => {
         loading: false,
         timestamps: times,
         // TODO: add a way to pre-select a time from `action.payload`
-        selected: times[0]
+        selected: times[0],
+        preview: {
+          data: [{x: 0}, {x: 1}]
+        }
       };
     case SELECT_TIME:
       const time = action.payload.time;
       if (state.timestamps.indexOf(time) < 0) {
-        console.log(action.payload);
-        console.error(`[SELECT_TIME] - the time value of ${time} is not valid`);
         return state;
       }
 
@@ -84,6 +87,25 @@ export default (state = initialState, action) => {
       return {
         ...state,
         selected: previousSelected
+      };
+    case SET_TIMELINE_PREVIEW:
+      const { source, transform } = action.payload;
+      console.log('SET_TIMELINE_PREVIEW');
+      if (source && transform) {
+        const transformFn = transform(source);
+        const preview = {
+          data: transformFn(state.timestamps)
+        }
+
+        return {
+          ...state,
+          preview
+        };
+      }
+
+      return {
+        ...state,
+        preview: {}
       };
     default:
       return state;

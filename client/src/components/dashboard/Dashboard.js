@@ -121,8 +121,8 @@ const Dashboard = ({ onDayChanged }) => {
   const renderControls = () => {
     return (
       <div className="dashboard-controls py-1 flex">
-        <div className="w-1/4"></div>
-        <div className="w-1/2">
+        <div className="hidden lg:w-1/4"></div>
+        <div className="w-full lg:w-1/2">
           <div className="dashboard__select flex justify-center space-x-2">
             <button
               className="dashboard__timeline-toggle align-middle rounded-md text-sm text-gray-300 border border-gray-500 px-2 py-2 hover:bg-primary disabled:opacity-25"
@@ -165,7 +165,7 @@ const Dashboard = ({ onDayChanged }) => {
             </button>
           </div>
         </div>
-        <div className="w-1/4">
+        <div className="hidden lg:w-1/4">
           <div className="dashboard__select flex justify-end space-x-2">
             {
               !isPaused &&
@@ -194,8 +194,8 @@ const Dashboard = ({ onDayChanged }) => {
    * Render Function
    */
   return (
-    <div className="dashboard absolute inset-x-0 bottom-0 py-10 px-4 z-50">
-      <div className="bg-black bg-opacity-75 rounded-lg w-full py-4 px-8">
+    <div className="dashboard absolute inset-x-0 bottom-0 py-10 px-2 lg:px-4 z-50">
+      <div className="bg-black bg-opacity-75 rounded-lg w-full py-4 px-3 lg:px-8">
         {renderControls()}
         {renderDetail()}
         <Timeline />

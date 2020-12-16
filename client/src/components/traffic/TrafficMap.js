@@ -5,11 +5,11 @@ import Feature from '../mapbox/Feature';
 
 const TRAFFIC_COLOUR = (score) => {
   if (score > 10) {
-    return 'red';
+    return '#F9874E';
   } else if (score < -10) {
-    return 'green';
+    return '#8CC788';
   } else {
-    return 'yellow';
+    return '#FAC758';
   }
 };
 
@@ -54,7 +54,8 @@ const TrafficMap = () => {
           attributes: {
             from: datum.path.from,
             to: datum.path.to,
-            timestamp: snapshot.timestamp
+            timestamp: snapshot.timestamp,
+            legs
           }
         };
 
@@ -84,11 +85,31 @@ const TrafficMap = () => {
     return Object.keys(pathMap).map((pathId) => {
       const { layerData, sourceData } = pathMap[pathId];
       return (
-        <Layer type="line" data={layerData} id={pathId} source={pathId} key={pathId} >
+        <Layer type="line" data={layerData} id={pathId} source={pathId} key={pathId} onClick={onPathClicked}>
           <Feature data={sourceData} id={pathId} type="LineString"/>
         </Layer>
       )
     });
+  };
+
+  const onPathClicked = (e) => {
+    /* var coordinates = e.features[0].geometry.coordinates.slice();
+    var description = e.features[0].properties.description;
+
+    // Ensure that if the map is zoomed out such that multiple
+    // copies of the feature are visible, the popup appears
+    // over the copy being pointed to.
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+
+    new mapboxgl.Popup()
+      .setLngLat(coordinates)
+      .setHTML(description)
+      .addTo(map); */
+
+    console.log(e);
+    console.log(e.features[0].properties);
   };
 
   if (!Number.isInteger(selectedTime)) {

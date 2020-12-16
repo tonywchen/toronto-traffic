@@ -9,5 +9,6 @@ export const UPDATE_TIMELINE = 'update_timeline';
 export const SELECT_TIME = 'select_time';
 export const SELECT_NEXT_TIME = 'select_next_time';
 export const SELECT_PREVIOUS_TIME = 'select_previous_time';
+export const SET_TIMELINE_PREVIEW = 'set_timeline_preview';
 
 export const FETCH_SUBROUTES = 'fetch_subroutes';

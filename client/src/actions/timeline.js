@@ -1,4 +1,4 @@
-import { SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME } from './types';
+import { SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME, SET_TIMELINE_PREVIEW } from './types';
 
 export const selectTime = (time) => {
   return (dispatch) => {
@@ -25,3 +25,15 @@ export const selectPreviousTime = () => {
     });
   }
 };
+
+export const setTimelinePreview = (source, mapper) => {
+  return (dispatch) => {
+    dispatch({
+      type: SET_TIMELINE_PREVIEW,
+      payload: {
+        source,
+        mapper
+      }
+    });
+  }
+}

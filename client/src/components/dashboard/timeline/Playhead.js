@@ -8,9 +8,9 @@ const MODES = {
   'EDIT': 'EDIT'
 };
 const COLORS = {
-  'VIEW': 'white',
+  'VIEW': 'gray-300',
   'LOOKUP': 'gray-500',
-  'EDIT': 'yellow-500'
+  'EDIT': 'blue-500'
 };
 
 const getMode = (edit, lookup) => {
@@ -72,7 +72,7 @@ const Playhead = (props) => {
 
   const renderGuides = () => {
     return (
-      <div className="timeline-playhead__guides relative h-8 w-full">
+      <div className="timeline-playhead__guides relative h-10 w-full">
         { renderSelectedTimeGuide() }
         { renderLookupTimeGuide() }
       </div>
@@ -83,7 +83,7 @@ const Playhead = (props) => {
     style.width = `${1 / timestamps.length * 100}%`
 
     return (
-      <div className="absolute h-8 border-r border-white border-opacity-100" style={style}>
+      <div className="absolute mt-6 h-4 border-r border-gray-400 border-opacity-100" style={style}>
       </div>
     );
   };
@@ -98,7 +98,7 @@ const Playhead = (props) => {
     const borderColorClass = `border-${COLORS[mode]}`;
 
     return (
-      <div className={`absolute h-8 border-r ${borderColorClass} border-opacity-100`} style={style}>
+      <div className={`absolute h-10 border-r ${borderColorClass} border-opacity-100`} style={style}>
       </div>
     );
   };
@@ -140,7 +140,7 @@ const Playhead = (props) => {
   };
 
   return (
-    <div className="timeline-playhead">
+    <div className="timeline-playhead relative z-30">
       { !isTimelineLoading && renderGuides() }
       { !isTimelineLoading && renderTimes() }
     </div>

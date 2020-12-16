@@ -6,6 +6,7 @@ import _ from 'lodash';
 
 import { selectTime } from '../../../actions/timeline';
 
+import Preview from './Preview';
 import Ruler from './Ruler';
 import Playhead from './Playhead';
 
@@ -30,15 +31,20 @@ const createDomain = () => {
   };
 };
 
-const isPointWithinBounds = (point, bounds) => {
+const mapPointWithinBounds = (point, bounds) => {
   const [x, y] = point;
   const {width, height, top, left} = bounds;
 
-  const isWithinX = x >= left && x <= (left + width);
-  const isWithinY = y >= top && y <= (top + height);
+  const xPercent = (x - left) / width;
+  const yPercent = (y - top) / height;
+  const isWithinX = xPercent >= 0 && xPercent <= 100;
+  const isWithinY = yPercent >= 0 && yPercent <= 100;
 
-  return isWithinX && isWithinY;
-};
+  return {
+    percent: [xPercent, yPercent],
+    isWithin: isWithinX && isWithinY
+  };
+}
 
 const Timeline = () => {
   const dispatch = useDispatch();
@@ -54,22 +60,21 @@ const Timeline = () => {
     onDrag: (state) => {
       const bounds = timelineRef.current.getBoundingClientRect();
       const e = state.event;
-      const x = e.clientX - bounds.left;
-      const width = bounds.width;
-      const xPercent = x / width;
+      const { percent, isWithin } = mapPointWithinBounds([e.clientX, e.clientY], bounds)
+      const xPercent = percent[0];
 
       const newTimeOffset = nearest(xPercent);
       const newLookupTime = moment(timestamps[0]).startOf('day').add(newTimeOffset, 'minutes').valueOf();
-      setLookupTime(newLookupTime);
 
-      const isWithinTimeline = isPointWithinBounds([e.clientX, e.clientY], bounds);
-      setDragging(isWithinTimeline);
+      setLookupTime(newLookupTime);
+      setDragging(isWithin);
     },
     onDragEnd: (state) => {
-      const e = state.event;
       const bounds = timelineRef.current.getBoundingClientRect();
-      const isWithinTimeline = isPointWithinBounds([e.clientX, e.clientY], bounds);
-      if (isWithinTimeline) {
+      const e = state.event;
+      const { isWithin } = mapPointWithinBounds([e.clientX, e.clientY], bounds)
+
+      if (isWithin) {
         dispatch(selectTime(lookupTime));
       }
 
@@ -84,6 +89,7 @@ const Timeline = () => {
       {...bind()}
       ref={timelineRef}>
       <div className="timeline__track relative h-12 w-full">
+        <Preview />
         <Ruler domain={domain} dragging={dragging}/>
         <Playhead domain={domain} lookupTime={lookupTime} dragging={dragging} />
       </div>
