@@ -6,7 +6,7 @@ import TrafficMap from './components/traffic/TrafficMap';
 import SubrouteMap from './components/route/SubrouteMap';
 import Dashboard from './components/dashboard/Dashboard';
 
-import { fetchTraffic } from './actions/traffic';
+import { fetchTraffic, fetchPaths } from './actions/traffic';
 import { fetchSubroutes } from './actions/route';
 
 import './styles.scss';
@@ -22,8 +22,13 @@ const App = () => {
     return dispatch(fetchTraffic(newTime));
   };
 
+  const dispatchFetchPaths = () => {
+    return dispatch(fetchPaths());
+  };
+
   useEffect(async () => {
-    await dispatchFetchSubroutes();
+    // await dispatchFetchSubroutes();
+    await dispatchFetchPaths();
     await dispatchFetchTraffic();
   }, []);
 

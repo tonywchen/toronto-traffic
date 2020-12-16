@@ -21,5 +21,8 @@ export default {
     return connect().get(`${SERVER_URL}/traffic`, {
       params
     });
+  },
+  fetchPaths: () => {
+    return connect().get(`${SERVER_URL}/paths`);
   }
 }

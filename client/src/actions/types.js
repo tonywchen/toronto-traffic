@@ -2,6 +2,8 @@ export const FETCH_TRAFFIC = 'fetch_traffic';
 export const SELECT_TRAFFIC = 'select_traffic';
 export const SELECT_NEXT_TRAFFIC = 'select_next_traffic';
 
+export const FETCH_PATHS = 'fetch_paths';
+
 export const REFRESH_TIMELINE = 'refresh_timeline';
 export const UPDATE_TIMELINE = 'update_timeline';
 export const SELECT_TIME = 'select_time';

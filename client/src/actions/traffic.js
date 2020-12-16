@@ -1,4 +1,4 @@
-import { FETCH_TRAFFIC, UPDATE_TIMELINE, REFRESH_TIMELINE } from './types';
+import { FETCH_TRAFFIC, FETCH_PATHS, UPDATE_TIMELINE, REFRESH_TIMELINE } from './types';
 import resource from '../resources/traffic';
 
 export const fetchTraffic = (from) => {
@@ -21,4 +21,15 @@ export const fetchTraffic = (from) => {
     });
   }
 };
+
+export const fetchPaths = () => {
+  return async (dispatch) => {
+    const response = await resource.fetchPaths();
+
+    dispatch({
+      type: FETCH_PATHS,
+      payload: response.data
+    });
+  }
+}
 

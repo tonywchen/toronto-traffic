@@ -1,13 +1,13 @@
-import { FETCH_TRAFFIC, SELECT_TRAFFIC, SELECT_NEXT_TRAFFIC } from '../actions/types';
+import { FETCH_TRAFFIC, FETCH_PATHS } from '../actions/types';
 
 const initialState = {
-  trafficByTimestamp: {}
+  trafficByTimestamp: {},
+  paths: []
 };
 
 export default (state = initialState, action) => {
   switch (action.type) {
     case FETCH_TRAFFIC:
-      console.log('FETCH_TRAFFIC');
       // TODO: consider the possibility to use a cache using timestamp/route as key
       // to reduce number of requests, since most of these data are historical and
       // should not change
@@ -19,6 +19,11 @@ export default (state = initialState, action) => {
       return {
         ...state,
         trafficByTimestamp
+      };
+    case FETCH_PATHS:
+      return {
+        ...state,
+        paths: action.payload.paths || []
       };
     default:
       return state;
