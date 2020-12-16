@@ -1,17 +1,17 @@
 const {performance} = require('perf_hooks');
 const moment = require('moment-timezone');
 
-const Stop = require('../../models/nextbus/Stop');
-const Path = require('../../models/traffic/Path');
-const PathStatus = require('../../models/traffic/PathStatus');
+const Stop = require('../../../models/nextbus/Stop');
+const Path = require('../../../models/traffic/Path');
+const PathStatus = require('../../../models/traffic/PathStatus');
 
 const mbxClient = require('@mapbox/mapbox-sdk');
 const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
 
 const polyline = require('@mapbox/polyline');
 
-const tokens = require('../configs/tokens.json');
-const SystemSetting = require('../../models/SystemSetting');
+const tokens = require('../../configs/tokens.json');
+const SystemSetting = require('../../../models/SystemSetting');
 const baseClient = mbxClient({ accessToken: tokens.mapbox });
 
 const GoogleMaps = require("@googlemaps/google-maps-services-js");

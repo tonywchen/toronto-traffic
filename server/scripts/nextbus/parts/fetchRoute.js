@@ -1,6 +1,6 @@
-const NextbusService = require('../../services/Nextbus');
-const Stop = require('../../models/nextbus/Stop');
-const Subroute = require('../../models/nextbus/Subroute');
+const NextbusService = require('../../../services/Nextbus');
+const Stop = require('../../../models/nextbus/Stop');
+const Subroute = require('../../../models/nextbus/Subroute');
 
 const nextbusService = NextbusService();
 

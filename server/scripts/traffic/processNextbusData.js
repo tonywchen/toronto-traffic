@@ -6,8 +6,8 @@
 const mongoose = require('mongoose');
 const Agenda = require('agenda');
 
-const convertPredictions = require('./convertPredictions');
-const computePathData = require('./computePathData');
+const convertPredictions = require('./parts/convertPredictions');
+const computePathData = require('./parts/computePathData');
 
 const JOB_PROCESS_NEXTBUS_DATA = 'PROCESS_NEXTBUS_DATA';
 

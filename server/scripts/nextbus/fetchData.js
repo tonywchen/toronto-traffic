@@ -6,8 +6,8 @@
 const mongoose = require('mongoose');
 const Agenda = require('agenda');
 
-const fetchRoute = require('./fetchRoute');
-const fetchTrips = require('./fetchTrips');
+const fetchRoute = require('./parts/fetchRoute');
+const fetchTrips = require('./parts/fetchTrips');
 
 const jobs = [{
   name: fetchRoute.name,

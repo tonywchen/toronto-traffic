@@ -52,7 +52,7 @@ const populatePaths = async () => {
     subroute.stops.forEach((stop, stopIndex) => {
       if (stopIndex >= subroute.stops.length - 1) {
         return;
-  }
+      }
 
       const nextStopIndex = stopIndex + 1;
       const stopTag = stop.tag;
@@ -75,7 +75,7 @@ const populatePaths = async () => {
     const missingPath = potentialPathMap[missingPathIdentifier];
     if (!missingPath) {
       return;
-  }
+    }
 
     await Path.findOneAndUpdate({
       from: missingPath.from,
@@ -83,7 +83,7 @@ const populatePaths = async () => {
     }, {}, {
       new: true,
       upsert: true
-  });
+    });
   }
 
   console.log(`${missingPathIdentifiers.length} missing paths have been automatically generated`);
