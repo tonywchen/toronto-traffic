@@ -37,5 +37,6 @@ pathSchema.pre('updateOne', preSaveOrUpdateFn);
 pathSchema.pre('findOneAndUpdate', preSaveOrUpdateFn);
 
 const Path = mongoose.model('Path', pathSchema);
+Path.VERSION = VERSION;
 
 module.exports = Path;
