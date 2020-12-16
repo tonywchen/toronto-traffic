@@ -194,8 +194,8 @@ const Dashboard = ({ onDayChanged }) => {
    * Render Function
    */
   return (
-    <div className="dashboard absolute inset-x-0 bottom-0 py-16 px-16 z-50">
-      <div className="bg-black bg-opacity-75 rounded-lg w-full py-4 px-4">
+    <div className="dashboard absolute inset-x-0 bottom-0 py-10 px-4 z-50">
+      <div className="bg-black bg-opacity-75 rounded-lg w-full py-4 px-8">
         {renderControls()}
         {renderDetail()}
         <Timeline />
