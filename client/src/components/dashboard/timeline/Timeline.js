@@ -10,27 +10,37 @@ import Preview from './Preview';
 import Ruler from './Ruler';
 import Playhead from './Playhead';
 
+import { ReactComponent as RewindIcon } from '../../icons/rewind.svg';
+import { ReactComponent as PlayIcon } from '../../icons/play.svg';
+import { ReactComponent as StopIcon } from '../../icons/stop.svg';
+import { ReactComponent as ForwardIcon } from '../../icons/forward.svg';
+
 const MAX_TIME_DISPLAYED = 60 * 24; // 24 hours
 const TICK_INTERVAL = 5; // 5 minutes
 const NUM_OF_TICKS = MAX_TIME_DISPLAYED / TICK_INTERVAL;
-
-const createDomain = () => {
-  const domain = Array.from({ length: NUM_OF_TICKS }).map((value, index) => {
-    return index * TICK_INTERVAL;
-  });
-
-  const nearest = (percent) => {
-    percent = Math.min(1, Math.max(percent, 0)); // percent should be [0, 1]
-    const nearestIndex = Math.round(percent * (NUM_OF_TICKS - 1));
-    return domain[nearestIndex];
-  };
-
-  return {
-    domain,
-    nearest
-  };
+const SPEED = {
+  FAST: {
+    value: 250,
+    text: '0.5x'
+  },
+  NORMAL: {
+    value: 500,
+    text: '1x'
+  },
+  SLOW: {
+    value: 1000,
+    text: '2x'
+  }
 };
 
+const domain = Array.from({ length: NUM_OF_TICKS }).map((value, index) => {
+  return index * TICK_INTERVAL;
+});
+const nearest = (percent) => {
+  percent = Math.min(1, Math.max(percent, 0)); // percent should be [0, 1]
+  const nearestIndex = Math.round(percent * (NUM_OF_TICKS - 1));
+  return domain[nearestIndex];
+};
 const mapPointWithinBounds = (point, bounds) => {
   const [x, y] = point;
   const {width, height, top, left} = bounds;
@@ -46,7 +56,7 @@ const mapPointWithinBounds = (point, bounds) => {
   };
 }
 
-const Timeline = ({handleDayChange}) => {
+const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed, paused}) => {
   const dispatch = useDispatch();
   const timestamps = useSelector(store => store.timeline.timestamps);
   const dataStatus = useSelector(store => store.timeline.dataStatus);
@@ -54,8 +64,6 @@ const Timeline = ({handleDayChange}) => {
   const [lookupTime, setLookupTime] = useState(null);
   const [dragging, setDragging] = useState(false);
   const timelineRef = useRef();
-
-  const { domain, nearest } = createDomain();
 
   const bind = useGesture({
     onDrag: (state) => {
@@ -92,6 +100,63 @@ const Timeline = ({handleDayChange}) => {
     handleDayChange(daysChanged);
   };
 
+  const renderTimelineControls = () => {
+    return (
+      <div className={`dashboard-controls flex`}>
+        <div className="hidden lg:block lg:w-1/4"></div>
+        <div className="w-full lg:w-1/2">
+          <div className="dashboard__select flex justify-center space-x-4">
+            <button
+              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover:text-white px-2 py-2 hover:bg-blue-500 disabled:opacity-25"
+              onClick={rewind}
+              disabled={dragging}>
+              <div className="dashboard__timeline-toggle-inner w-4 h-4 lg:w-6 lg:h-6">
+                <RewindIcon />
+              </div>
+            </button>
+            <button
+              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-300 px-0 py-0 hover:bg-blue-500 disabled:opacity-25"
+              onClick={toggle}
+              disabled={dragging}>
+              <div className="dashboard__timeline-toggle-inner w-8 h-8 lg:w-10 lg:h-10">
+                {(paused) ? <PlayIcon /> : <StopIcon />}
+              </div>
+            </button>
+            <button
+              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover:text-white px-2 py-2 hover:bg-blue-500 disabled:opacity-25"
+              onClick={forward}
+              disabled={dragging}>
+              <div className="dashboard__timeline-toggle-inner w-4 h-4 lg:w-6 lg:h-6">
+                <ForwardIcon />
+              </div>
+            </button>
+          </div>
+        </div>
+        <div className="hidden lg:block lg:w-1/4">
+          <div className="dashboard__select flex justify-end space-x-2">
+            {
+              !paused &&
+              [SPEED.FAST, SPEED.NORMAL, SPEED.SLOW].map((s) => {
+                const bgColorClass = (s.value === speed) ? 'bg-primary' : '';
+                const textClass = (s.value === speed) ? 'text-xs text-white font-bold' : 'text-xs text-gray-300';
+
+                return (
+                  <button
+                    className={`align-middle rounded-md ${textClass} border border-gray-500 w-10 h-10 ${bgColorClass} hover:bg-primary`}
+                    key={s.value}
+                    onClick={() => changeSpeed(s.value)}
+                  >
+                    {s.text}
+                  </button>
+                );
+              })
+            }
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderEmptyState = () => {
     const lastDateString = moment(dataStatus.last).format('YYYY/MM/DD');
     const message = `No data today. Jump to last available date?`
@@ -99,12 +164,12 @@ const Timeline = ({handleDayChange}) => {
 
     return (
       <div
-        className={`timeline py-2 lg:py-3 px-2 lg:px-3 flex justify-center`}>
-        <div className={`timeline-info flex h-12 w-full max-w-screen-sm rounded bg-blue-500 bg-opacity-25 text-gray-300 justify-between items-center`}>
-          <div className={`px-2 lg:px-8 text-xs lg:text-sm`}>{message}</div>
+        className={`timeline py-4 lg:py-5 px-2 lg:px-3 flex justify-center`}>
+        <div className={`timeline-info flex h-16 w-full max-w-screen-sm rounded bg-blue-500 bg-opacity-25 text-gray-300 justify-between items-center`}>
+          <div className={`px-4 lg:px-8 text-xs lg:text-sm`}>{message}</div>
           <button
             onClick={() => jumpToDay(dataStatus.last)}
-            className={`h-12 px-2 lg:px-8 rounded bg-blue-500 text-white text-xs lg:text-sm font-bold justify-center items-center`}>
+            className={`h-full px-2 lg:px-8 rounded bg-blue-500 text-white text-xs lg:text-sm font-bold justify-center items-center`}>
             {action}
           </button>
         </div>
@@ -115,14 +180,14 @@ const Timeline = ({handleDayChange}) => {
   const renderTimeline = () => {
     return (
       <div
-        className={`timeline relative rounded-xl py-3`}
-        {...bind()}
+        className={`timeline relative`}
         ref={timelineRef}>
-        <div className="timeline__track relative h-12 w-full">
+        <div className="timeline__track relative h-16 w-full" {...bind()}>
           <Preview />
           <Ruler domain={domain} dragging={dragging}/>
           <Playhead domain={domain} lookupTime={lookupTime} dragging={dragging} />
         </div>
+        { renderTimelineControls() }
       </div>
     );
   };
