@@ -94,7 +94,7 @@ export default (state = initialState, action) => {
     case SELECT_PREVIOUS_TIME:
       let previousSelected;
       currentIndex = state.timestamps.indexOf(state.selected);
-      if (!state.selected || currentIndex < 0) {
+      if (!state.selected || currentIndex <= 0) {
         previousSelected = state.timestamps[0];
       } else {
         const nextIndex = (currentIndex - 1) % state.timestamps.length;

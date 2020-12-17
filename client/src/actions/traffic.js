@@ -11,12 +11,12 @@ import {
 import resource from '../resources/traffic';
 
 const TRAFFIC_COLOUR = (score) => {
-  if (score > 2) {
-    return '#F9874E';
-  } else if (score < -2) {
-    return '#8CC788';
+  if (score > 3) {
+    return '#F9874E'; // red
+  } else if (score < -3) {
+    return '#8CC788'; // green
   } else {
-    return '#FAC758';
+    return '#FAC758'; // yellow
   }
 };
 

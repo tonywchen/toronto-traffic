@@ -4,6 +4,8 @@ import { selectNextTime, selectPreviousTime } from '../../actions/timeline';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
+import { DATE_FORMAT, DAY_FORMAT } from '../common/Util';
+
 import { ReactComponent as PreviousIcon } from '../icons/previous.svg';
 import { ReactComponent as NextIcon } from '../icons/next.svg';
 
@@ -123,8 +125,9 @@ const Dashboard = ({ onDayChanged }) => {
               <PreviousIcon />
             </div>
           </button>
-          <div className="dashboard-detail text-sm text-center text-white leading-10 font-bold w-28">
-            <h4>{moment(timestamps[0]).format('YYYY/MM/DD')}</h4>
+          <div className="dashboard-detail text-center font-bold w-28 flex flex-col space-y-1">
+            <h4 className="text-white text-sm">{moment(timestamps[0]).format(DATE_FORMAT)}</h4>
+            <h6 className="text-gray-500 text-xs">{moment(timestamps[0]).format(DAY_FORMAT)}</h6>
           </div>
           <button
             className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover-hover:hover:text-white px-2 py-2 hover-hover:hover:bg-blue-500 disabled:opacity-25 disabled:pointer-events-none"

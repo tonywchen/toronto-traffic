@@ -2,9 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useGesture } from 'react-use-gesture'
 import moment from 'moment-timezone';
-import _ from 'lodash';
 
 import { selectTime } from '../../../actions/timeline';
+import { DATE_FORMAT } from '../../common/Util';
 
 import Preview from './Preview';
 import Ruler from './Ruler';
@@ -12,7 +12,7 @@ import Playhead from './Playhead';
 
 import { ReactComponent as RewindIcon } from '../../icons/rewind.svg';
 import { ReactComponent as PlayIcon } from '../../icons/play.svg';
-import { ReactComponent as StopIcon } from '../../icons/stop.svg';
+import { ReactComponent as PauseIcon } from '../../icons/pause.svg';
 import { ReactComponent as ForwardIcon } from '../../icons/forward.svg';
 
 const MAX_TIME_DISPLAYED = 60 * 24; // 24 hours
@@ -120,7 +120,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
               onClick={toggle}
               disabled={dragging}>
               <div className="dashboard__timeline-toggle-inner w-8 h-8 lg:w-10 lg:h-10">
-                {(paused) ? <PlayIcon /> : <StopIcon />}
+                {(paused) ? <PlayIcon /> : <PauseIcon />}
               </div>
             </button>
             <button
@@ -139,12 +139,12 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
               {
                 !paused &&
                 [SPEED.FAST, SPEED.NORMAL, SPEED.SLOW].map((s, index) => {
-                  const bgColorClass = (s.value === speed) ? 'bg-blue-500' : '';
+                  const bgColorClass = (s.value === speed) ? 'bg-blue-800' : 'bg-gray-900';
                   const textClass = (s.value === speed) ? 'text-xs text-white font-bold' : 'text-xs text-gray-300 font-bold';
 
                   return (
                     <button
-                      className={`align-middle ${textClass} bg-white bg-opacity-10 w-12 h-8 ${bgColorClass} hover-hover:hover:bg-blue-500`}
+                      className={`align-middle ${textClass} w-12 h-8 ${bgColorClass} hover-hover:hover:bg-blue-500`}
                       key={s.value}
                       onClick={() => changeSpeed(s.value)}
                     >
@@ -176,7 +176,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
     const isBeforeFirst = timestamps[0] < dataStatus.first;
     const isAfterLast = timestamps[0] > dataStatus.last;
     const toTimestamp = (isBeforeFirst && dataStatus.first) || (isAfterLast && dataStatus.last);
-    const toDateString = moment(toTimestamp).format('YYYY/MM/DD');
+    const toDateString = moment(toTimestamp).format(DATE_FORMAT);
 
     const canJumpToDate = isBeforeFirst || isAfterLast;
     const justifyClass = (canJumpToDate)? 'justify-between' : 'justify-center';
