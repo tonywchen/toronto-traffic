@@ -46,9 +46,10 @@ const mapPointWithinBounds = (point, bounds) => {
   };
 }
 
-const Timeline = () => {
+const Timeline = ({handleDayChange}) => {
   const dispatch = useDispatch();
   const timestamps = useSelector(store => store.timeline.timestamps);
+  const dataStatus = useSelector(store => store.timeline.dataStatus);
 
   const [lookupTime, setLookupTime] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -83,19 +84,54 @@ const Timeline = () => {
     }
   });
 
-  return (
-    <div
-      className={`timeline relative rounded-xl py-3`}
-      {...bind()}
-      ref={timelineRef}>
-      <div className="timeline__track relative h-12 w-full">
-        <Preview />
-        <Ruler domain={domain} dragging={dragging}/>
-        <Playhead domain={domain} lookupTime={lookupTime} dragging={dragging} />
-      </div>
-    </div>
-  );
+  const jumpToDay = (to) => {
+    const currentDate = moment(timestamps[0]);
+    const toDate = moment(to).startOf('days');
+    const daysChanged = toDate.diff(currentDate, 'days');
 
+    handleDayChange(daysChanged);
+  };
+
+  const renderEmptyState = () => {
+    const lastDateString = moment(dataStatus.last).format('YYYY/MM/DD');
+    const message = `No data today. Jump to last available date?`
+    const action = `Jump to ${lastDateString}`;
+
+    return (
+      <div
+        className={`timeline py-2 lg:py-3 px-2 lg:px-3 flex justify-center`}>
+        <div className={`timeline-info flex h-12 w-full max-w-screen-sm rounded bg-blue-500 bg-opacity-25 text-gray-300 justify-between items-center`}>
+          <div className={`px-2 lg:px-8 text-xs lg:text-sm`}>{message}</div>
+          <button
+            onClick={() => jumpToDay(dataStatus.last)}
+            className={`h-12 px-2 lg:px-8 rounded bg-blue-500 text-white text-xs lg:text-sm font-bold justify-center items-center`}>
+            {action}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTimeline = () => {
+    return (
+      <div
+        className={`timeline relative rounded-xl py-3`}
+        {...bind()}
+        ref={timelineRef}>
+        <div className="timeline__track relative h-12 w-full">
+          <Preview />
+          <Ruler domain={domain} dragging={dragging}/>
+          <Playhead domain={domain} lookupTime={lookupTime} dragging={dragging} />
+        </div>
+      </div>
+    );
+  };
+
+  if (dataStatus.available) {
+    return renderTimeline();
+  } else {
+    return renderEmptyState();
+  }
 };
 
 export default Timeline;

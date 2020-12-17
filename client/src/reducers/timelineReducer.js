@@ -1,12 +1,24 @@
 import moment from 'moment-timezone';
 import _ from 'lodash';
-import { REFRESH_TIMELINE, UPDATE_TIMELINE, SELECT_TIME, SELECT_NEXT_TIME, SELECT_PREVIOUS_TIME, SET_TIMELINE_PREVIEW } from '../actions/types';
+import {
+  REFRESH_TIMELINE,
+  UPDATE_TIMELINE,
+  SELECT_TIME,
+  SELECT_NEXT_TIME,
+  SELECT_PREVIOUS_TIME,
+  SET_TIMELINE_PREVIEW,
+  SET_TIMELINE_DATA_STATUS
+} from '../actions/types';
 
 const initialState = {
   loading: false,
   timestamps: [],
   selected: null,
-  preview: {}
+  preview: {},
+  dataStatus: {
+    available: false,
+    last: 0
+  }
 };
 
 const computeTimes = (from, to, interval) => {
@@ -90,7 +102,6 @@ export default (state = initialState, action) => {
       };
     case SET_TIMELINE_PREVIEW:
       const { source, transform } = action.payload;
-      console.log('SET_TIMELINE_PREVIEW');
       if (source && transform) {
         const transformFn = transform(source);
         const preview = {
@@ -106,6 +117,11 @@ export default (state = initialState, action) => {
       return {
         ...state,
         preview: {}
+      };
+    case SET_TIMELINE_DATA_STATUS:
+      return {
+        ...state,
+        dataStatus: action.payload.dataStatus
       };
     default:
       return state;

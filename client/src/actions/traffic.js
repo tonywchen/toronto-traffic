@@ -1,6 +1,13 @@
 import _ from 'lodash';
 
-import { FETCH_TRAFFIC, FETCH_PATHS, UPDATE_TIMELINE, REFRESH_TIMELINE, SET_TIMELINE_PREVIEW } from './types';
+import {
+  FETCH_TRAFFIC,
+  FETCH_PATHS,
+  UPDATE_TIMELINE,
+  REFRESH_TIMELINE,
+  SET_TIMELINE_PREVIEW,
+  SET_TIMELINE_DATA_STATUS
+} from './types';
 import resource from '../resources/traffic';
 
 const TRAFFIC_COLOUR = (score) => {
@@ -51,6 +58,35 @@ const trafficTransformer = (source) => {
   }
 };
 
+const dispatchToTimeline = (dispatch, getState, from, trafficResponse) => {
+  dispatch({
+    type: UPDATE_TIMELINE,
+    payload: {
+      from
+    }
+  });
+
+  const dataStatus = {
+    available: !!trafficResponse.data.results.length,
+    last: trafficResponse.data.last
+  };
+  dispatch({
+    type: SET_TIMELINE_DATA_STATUS,
+    payload: {
+      dataStatus
+    }
+  });
+
+  const trafficByTimestamp = getState().traffic.trafficByTimestamp;
+  dispatch({
+    type: SET_TIMELINE_PREVIEW,
+    payload: {
+      source: trafficByTimestamp,
+      transform: trafficTransformer
+    }
+  });
+};
+
 export const fetchTraffic = (from) => {
   return async (dispatch, getState) => {
     dispatch({
@@ -58,27 +94,12 @@ export const fetchTraffic = (from) => {
     });
 
     const response = await resource.fetchTraffic(from);
-
     dispatch({
       type: FETCH_TRAFFIC,
       payload: response.data
     });
-    dispatch({
-      type: UPDATE_TIMELINE,
-      payload: {
-        from
-      }
-    });
 
-    const trafficByTimestamp = getState().traffic.trafficByTimestamp;
-    console.log('dispatch SET_TIMELINE_PREVIEW');
-    dispatch({
-      type: SET_TIMELINE_PREVIEW,
-      payload: {
-        source: trafficByTimestamp,
-        transform: trafficTransformer
-      }
-    });
+    dispatchToTimeline(dispatch, getState, from, response);
   }
 };
 
