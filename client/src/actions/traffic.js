@@ -68,6 +68,7 @@ const dispatchToTimeline = (dispatch, getState, from, trafficResponse) => {
 
   const dataStatus = {
     available: !!trafficResponse.data.results.length,
+    first: trafficResponse.data.first,
     last: trafficResponse.data.last
   };
   dispatch({

@@ -58,6 +58,7 @@ const mapPointWithinBounds = (point, bounds) => {
 
 const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed, paused}) => {
   const dispatch = useDispatch();
+  const initialized = useSelector(store => store.timeline.initialized);
   const timestamps = useSelector(store => store.timeline.timestamps);
   const dataStatus = useSelector(store => store.timeline.dataStatus);
 
@@ -92,7 +93,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
     }
   });
 
-  const jumpToDay = (to) => {
+  const jumpToDate = (to) => {
     const currentDate = moment(timestamps[0]);
     const toDate = moment(to).startOf('days');
     const daysChanged = toDate.diff(currentDate, 'days');
@@ -107,7 +108,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
         <div className="w-full lg:w-1/2">
           <div className="dashboard__select flex justify-center space-x-4">
             <button
-              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover:text-white px-2 py-2 hover:bg-blue-500 disabled:opacity-25"
+              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover-hover:hover:text-white px-2 py-2 hover-hover:hover:bg-blue-500 disabled:opacity-25"
               onClick={rewind}
               disabled={dragging}>
               <div className="dashboard__timeline-toggle-inner w-4 h-4 lg:w-6 lg:h-6">
@@ -115,7 +116,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
               </div>
             </button>
             <button
-              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-300 px-0 py-0 hover:bg-blue-500 disabled:opacity-25"
+              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-300 px-0 py-0 hover-hover:hover:bg-blue-500 disabled:opacity-25"
               onClick={toggle}
               disabled={dragging}>
               <div className="dashboard__timeline-toggle-inner w-8 h-8 lg:w-10 lg:h-10">
@@ -123,7 +124,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
               </div>
             </button>
             <button
-              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover:text-white px-2 py-2 hover:bg-blue-500 disabled:opacity-25"
+              className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover-hover:hover:text-white px-2 py-2 hover-hover:hover:bg-blue-500 disabled:opacity-25"
               onClick={forward}
               disabled={dragging}>
               <div className="dashboard__timeline-toggle-inner w-4 h-4 lg:w-6 lg:h-6">
@@ -133,44 +134,72 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
           </div>
         </div>
         <div className="hidden lg:block lg:w-1/4">
-          <div className="dashboard__select flex justify-end space-x-2">
-            {
-              !paused &&
-              [SPEED.FAST, SPEED.NORMAL, SPEED.SLOW].map((s) => {
-                const bgColorClass = (s.value === speed) ? 'bg-primary' : '';
-                const textClass = (s.value === speed) ? 'text-xs text-white font-bold' : 'text-xs text-gray-300';
+          <div className="flex justify-end">
+            <div className="dashboard__select rounded-md overflow-hidden grid grid-cols-3 divide-x divide-black">
+              {
+                !paused &&
+                [SPEED.FAST, SPEED.NORMAL, SPEED.SLOW].map((s, index) => {
+                  const bgColorClass = (s.value === speed) ? 'bg-blue-500' : '';
+                  const textClass = (s.value === speed) ? 'text-xs text-white font-bold' : 'text-xs text-gray-300 font-bold';
 
-                return (
-                  <button
-                    className={`align-middle rounded-md ${textClass} border border-gray-500 w-10 h-10 ${bgColorClass} hover:bg-primary`}
-                    key={s.value}
-                    onClick={() => changeSpeed(s.value)}
-                  >
-                    {s.text}
-                  </button>
-                );
-              })
-            }
+                  return (
+                    <button
+                      className={`align-middle ${textClass} bg-white bg-opacity-10 w-12 h-8 ${bgColorClass} hover-hover:hover:bg-blue-500`}
+                      key={s.value}
+                      onClick={() => changeSpeed(s.value)}
+                    >
+                      {s.text}
+                    </button>
+                  );
+                })
+              }
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
+  const renderLoadingState = () => {
+    return (
+      <div
+        className={`timeline h-24 flex justify-center items-center`}>
+        <div className={`timeline-info flex h-12 w-full max-w-screen-sm rounded bg-blue-500 bg-opacity-25 text-gray-300 text-xs lg:text-sm justify-center items-center`}>
+          Initializing data...
+        </div>
+      </div>
+    );
+  };
+
   const renderEmptyState = () => {
-    const lastDateString = moment(dataStatus.last).format('YYYY/MM/DD');
-    const message = `No data today. Jump to last available date?`
-    const action = `Jump to ${lastDateString}`;
+    const isCompletelyEmpty = !dataStatus.first && !dataStatus.last;
+    const isBeforeFirst = timestamps[0] < dataStatus.first;
+    const isAfterLast = timestamps[0] > dataStatus.last;
+    const toTimestamp = (isBeforeFirst && dataStatus.first) || (isAfterLast && dataStatus.last);
+    const toDateString = moment(toTimestamp).format('YYYY/MM/DD');
+
+    const canJumpToDate = isBeforeFirst || isAfterLast;
+    const justifyClass = (canJumpToDate)? 'justify-between' : 'justify-center';
+    const hiddenClass = (canJumpToDate)? '' : 'hidden';
+
+    const message = (isCompletelyEmpty)
+      ? `No historical traffic data can be found. `
+      : `No traffic data today. `;
+    const offer = (isBeforeFirst && `Fast forward to first available date?`) || (isAfterLast && `Fast rewind to last available date?`) || ``;
+    const action = `Jump to ${toDateString}`;
 
     return (
       <div
-        className={`timeline py-4 lg:py-5 px-2 lg:px-3 flex justify-center`}>
-        <div className={`timeline-info flex h-16 w-full max-w-screen-sm rounded bg-blue-500 bg-opacity-25 text-gray-300 justify-between items-center`}>
-          <div className={`px-4 lg:px-8 text-xs lg:text-sm`}>{message}</div>
+        className={`timeline py-6 lg:py-7 px-2 lg:px-3 flex justify-center`}>
+        <div className={`timeline-info flex h-12 w-full max-w-screen-sm rounded bg-blue-500 bg-opacity-25 text-gray-300 ${justifyClass} items-center`}>
+          <div className={`px-2 lg:px-6 text-xs lg:text-sm`}>
+            { message }
+            { offer }
+          </div>
           <button
-            onClick={() => jumpToDay(dataStatus.last)}
-            className={`h-full px-2 lg:px-8 rounded bg-blue-500 text-white text-xs lg:text-sm font-bold justify-center items-center`}>
-            {action}
+            onClick={() => jumpToDate(dataStatus.last)}
+            className={`h-full px-2 lg:px-6 rounded bg-blue-500 text-white text-xs lg:text-sm font-bold justify-center items-center ${hiddenClass}`}>
+            { action }
           </button>
         </div>
       </div>
@@ -191,6 +220,10 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
       </div>
     );
   };
+
+  if (!initialized) {
+    return renderLoadingState();
+  }
 
   if (dataStatus.available) {
     return renderTimeline();

@@ -11,12 +11,16 @@ import {
 } from '../actions/types';
 
 const initialState = {
+  initialized: false,
   loading: false,
   timestamps: [],
   selected: null,
-  preview: {},
+  preview: {
+    data: []
+  },
   dataStatus: {
     available: false,
+    first: 0,
     last: 0
   }
 };
@@ -54,12 +58,13 @@ export default (state = initialState, action) => {
 
       return {
         ...state,
+        initialized: true,
         loading: false,
         timestamps: times,
         // TODO: add a way to pre-select a time from `action.payload`
         selected: times[0],
         preview: {
-          data: [{x: 0}, {x: 1}]
+          data: []
         }
       };
     case SELECT_TIME:

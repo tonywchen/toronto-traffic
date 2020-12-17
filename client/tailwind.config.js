@@ -11,10 +11,16 @@ module.exports = {
         secondary: 'var(--color-secondary)'
       }
     },
+    extend: {
+      screens: {
+        'hover-hover': {'raw': '(hover: hover)'},
+      }
+    }
   },
   variants: {
     extend: {
       opacity: ['disabled'],
+      pointerEvents: ['disabled']
     }
   },
   plugins: [],

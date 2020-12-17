@@ -26,6 +26,7 @@ const SPEED = {
 
 const Dashboard = ({ onDayChanged }) => {
   const timestamps = useSelector(store => store.timeline.timestamps);
+  const dataStatus = useSelector(store => store.timeline.dataStatus);
 
   const dispatch = useDispatch();
 
@@ -108,24 +109,27 @@ const Dashboard = ({ onDayChanged }) => {
    * Render Helper Functions
    */
   const renderDateControls = () => {
+    const isBeforeFirst = moment(timestamps[0]).isSameOrBefore(moment(dataStatus.first || 0), 'days');
+    const isAfterToday = moment(timestamps[0]).isSameOrAfter(moment(), 'days');
+
     return (
       <div className="dashboard-controls py-1 flex justify-center">
         <div className="dashboard__select flex justify-center space-x-2">
           <button
-            className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover:text-white px-2 py-2 hover:bg-blue-500 disabled:opacity-0"
+            className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover-hover:hover:text-white px-2 py-2 hover-hover:hover:bg-blue-500 disabled:opacity-25"
             onClick={() => { handleDayChange(-1) }}
-            disabled={!isPaused}>
+            disabled={isBeforeFirst || !isPaused}>
             <div className="dashboard__timeline-toggle-inner w-6 h-6">
               <PreviousIcon />
             </div>
           </button>
           <div className="dashboard-detail text-sm text-center text-white leading-10 font-bold w-28">
-          <h4>{moment(timestamps[0]).format('YYYY/MM/DD')}</h4>
-        </div>
+            <h4>{moment(timestamps[0]).format('YYYY/MM/DD')}</h4>
+          </div>
           <button
-            className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover:text-white px-2 py-2 hover:bg-blue-500 disabled:opacity-0"
+            className="dashboard__timeline-toggle align-middle rounded-full bg-black bg-opacity-50 text-gray-500 hover-hover:hover:text-white px-2 py-2 hover-hover:hover:bg-blue-500 disabled:opacity-25 disabled:pointer-events-none"
             onClick={() => { handleDayChange(1) }}
-            disabled={!isPaused}>
+            disabled={isAfterToday || !isPaused}>
             <div className="dashboard__timeline-toggle-inner w-6 h-6">
               <NextIcon />
             </div>
