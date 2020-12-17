@@ -29,7 +29,7 @@ const SubrouteMap = () => {
   };
 
   const layerData = {
-    lineColor: "grey",
+    lineColor: "#222222",
     lineWidth: 5,
     lineOffset: 5
   };

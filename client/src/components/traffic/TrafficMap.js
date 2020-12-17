@@ -30,7 +30,7 @@ const TrafficMap = () => {
     const pathMap = pathMapRef.current;
     Object.values(pathMap).forEach((path) => {
       path.layerData = path.layerData || {};
-      path.layerData.lineColor = 'white';
+      path.layerData.lineColor = 'transparent';
     });
 
     if (snapshots.length === 0) {
