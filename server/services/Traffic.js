@@ -111,11 +111,20 @@ class TrafficService {
     }];
 
     const recentPathStatuses = await PathStatus.aggregate(pathStatusPipeline);
+    const lastPathStatus = await this.getLastPathStatus();
+
     return {
       from: from,
       to: to,
-      results: recentPathStatuses
+      results: recentPathStatuses,
+      last: lastPathStatus.timestamp || 0
     };
+  }
+
+  async getLastPathStatus() {
+    const lastPathStatus = await PathStatus.findOne({}).sort({timestamp: -1});
+
+    return lastPathStatus;
   }
 }
 
