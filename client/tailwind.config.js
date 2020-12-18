@@ -5,6 +5,10 @@ module.exports = {
   purge: ['./src/**/*.js', './public/index.html'],
   darkMode: 'media', // or 'media' or 'class'
   theme: {
+    colors: {
+      ...colors,
+      gray: colors.trueGray,
+    },
     extend: {
       colors: {
         primary: 'var(--color-primary)',

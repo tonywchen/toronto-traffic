@@ -5,6 +5,7 @@ import Mapbox from './components/mapbox/Mapbox';
 import TrafficMap from './components/traffic/TrafficMap';
 import SubrouteMap from './components/route/SubrouteMap';
 import Dashboard from './components/dashboard/Dashboard';
+import Info from './components/info/Info';
 
 import { fetchTraffic, fetchPaths } from './actions/traffic';
 import { fetchSubroutes } from './actions/route';
@@ -36,6 +37,7 @@ const App = () => {
 
   return (
     <div>
+      <Info />
       <Mapbox>
         <SubrouteMap></SubrouteMap>
         <TrafficMap></TrafficMap>

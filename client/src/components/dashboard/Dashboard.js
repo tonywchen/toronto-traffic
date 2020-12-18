@@ -196,7 +196,7 @@ const Dashboard = ({ onDayChanged }) => {
    * Render Function
    */
   return (
-    <div className="dashboard absolute inset-x-0 bottom-0 py-10 px-2 lg:px-4 z-50 flex flex-col items-center space-y-2">
+    <div className="dashboard absolute inset-x-0 bottom-0 py-10 px-2 lg:px-4 z-40 flex flex-col items-center space-y-2">
 
       <div className="bg-black bg-opacity-75 w-min rounded-lg py-2 px-4">
         {renderDateControls()}
