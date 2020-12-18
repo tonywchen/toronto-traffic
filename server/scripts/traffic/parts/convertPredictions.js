@@ -4,7 +4,8 @@ const mongoose = require('mongoose');
 const Trip = require('../../models/nextbus/Trip');
 const SystemSetting = require('../../models/SystemSetting');
 
-const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes interval
+const MAX_TIME_RANGE = 24 * 60 * 60 * 1000; // limit script to process only at most 24 hours of data at a time
 
 /**
  * This script computes traffic data by taking prediction data in
@@ -13,13 +14,15 @@ const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes
  * recent complete batch so the rest of the script can use
  * the return value to limit the prediction data query.
  */
-const findRecentCompleteTimestamp = async () => {
+const findRecentCompleteTimestamp = async (lastProcessed) => {
   const result = await Trip.findOne().sort('-timestamp');
 
   if (result) {
     const { timestamp } = result;
     const roundedTimestamp = timestamp - timestamp % DEFAULT_TIME_RANGE;
-    return roundedTimestamp;
+    const maxTimestamp = lastProcessed + MAX_TIME_RANGE;
+
+    return Math.min(roundedTimestamp, maxTimestamp);
   }
 
   return 0;
@@ -410,7 +413,7 @@ const convertPredictions = async (routeTag) => {
     return;
   }
   const lastProcessed = await SystemSetting.findLastProcessed();
-  const maxTimestamp = await findRecentCompleteTimestamp();
+  const maxTimestamp = await findRecentCompleteTimestamp(lastProcessed);
 
   await populateNextStopTags(lastProcessed, maxTimestamp, routeTag);
   await populatePreviousStops(lastProcessed, maxTimestamp, routeTag);
