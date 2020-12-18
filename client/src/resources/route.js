@@ -8,8 +8,10 @@ const connect = () => {
   });
 }
 
-export default {
+const routes = {
   fetchSubroutes: () => {
     return connect().get(`${SERVER_URL}/subroutes`);
   }
-}
+};
+
+export default routes;

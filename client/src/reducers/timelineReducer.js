@@ -1,5 +1,4 @@
 import moment from 'moment-timezone';
-import _ from 'lodash';
 import {
   REFRESH_TIMELINE,
   UPDATE_TIMELINE,
@@ -41,7 +40,7 @@ const computeTimes = (from, to, interval) => {
   return times;
 }
 
-export default (state = initialState, action) => {
+const timelineReducer = (state = initialState, action) => {
   let currentIndex;
 
   switch(action.type) {
@@ -131,6 +130,8 @@ export default (state = initialState, action) => {
     default:
       return state;
   }
-}
+};
+
+export default timelineReducer;
 
 

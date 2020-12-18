@@ -4,7 +4,7 @@ const initialState = {
   subroutes: []
 };
 
-export default (state = initialState, action) => {
+const routeReducer = (state = initialState, action) => {
   switch (action.type) {
     case FETCH_SUBROUTES:
       return {
@@ -14,4 +14,6 @@ export default (state = initialState, action) => {
     default:
       return state;
   }
-}
+};
+
+export default routeReducer;

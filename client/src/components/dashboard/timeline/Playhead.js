@@ -50,6 +50,8 @@ const Playhead = (props) => {
         case MODES.EDIT:
           time = lookupTime;
           break;
+        default:
+          // do nothing
       }
     }
 

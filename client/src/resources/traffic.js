@@ -9,7 +9,7 @@ const connect = () => {
   });
 }
 
-export default {
+const traffic = {
   fetchTraffic: (from) => {
     const adjustedFrom = moment(from).startOf('day').valueOf();
     const adjustedTo = moment(from).endOf('day').valueOf();
@@ -25,4 +25,6 @@ export default {
   fetchPaths: () => {
     return connect().get(`${SERVER_URL}/paths`);
   }
-}
+};
+
+export default traffic;

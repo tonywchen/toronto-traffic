@@ -5,7 +5,7 @@ const initialState = {
   paths: []
 };
 
-export default (state = initialState, action) => {
+const trafficReducer = (state = initialState, action) => {
   switch (action.type) {
     case FETCH_TRAFFIC:
       // TODO: consider the possibility to use a cache using timestamp/route as key
@@ -29,3 +29,5 @@ export default (state = initialState, action) => {
       return state;
   }
 };
+
+export default trafficReducer;

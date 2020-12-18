@@ -36,9 +36,9 @@ const Feature = ({children, data, id, type}) => {
         return createLine(data, id)
       case 'FeatureCollection':
         return createCollection(data, id, type);
+      default:
+        return null;
     }
-
-    return null;
   };
 
   const createLine = (data, id) => {

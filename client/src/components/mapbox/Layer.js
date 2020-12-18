@@ -3,21 +3,6 @@ import MapContext from '../common/MapContext';
 
 import Feature from './Feature';
 
-const TYPES = {
-  'line': {
-    type: 'line',
-    layout: {
-      'line-join': 'round',
-      'line-cap': 'square'
-    },
-    paint: {
-      'line-color': 'white',
-      'line-width': 1,
-      'line-offset': 0
-    }
-  }
-};
-
 const getTypeData = (type, data) => {
   let typeData = null;
 
@@ -36,6 +21,8 @@ const getTypeData = (type, data) => {
         }
       }
       break;
+    default:
+      // do nothing
   }
 
   if (typeData && data) {
@@ -53,7 +40,6 @@ const Layer = ({children, data, id, type, source, onClick}) => {
   useEffect(() => {
     return () => {
       if (map && map.getLayer(id)) {
-        console.log('remove');
         map.removeLayer(id);
       }
     };
