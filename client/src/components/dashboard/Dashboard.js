@@ -39,7 +39,7 @@ const Dashboard = ({ onDayChanged }) => {
 
   const [isPaused, setPaused] = React.useState(true);
   const [animationSpeed, setAnimationSpeed] = React.useState(SPEED.NORMAL.value);
-  const [isDatePickerFocused, setDatePickerFocused] = React.useState(false);
+  const [isDatePickerOpen, setDatePickerOpen] = React.useState(false);
 
   /**
    * Animation Control Functions
@@ -155,9 +155,15 @@ const Dashboard = ({ onDayChanged }) => {
   };
 
   const DatePickerInput = ({ value, onClick }) => {
+    const toggle = () => {
+      if (!isDatePickerOpen) {
+        onClick();
+      }
+    };
+
     return (
-      <div className="px-2 rounded hover-hover:hover:bg-blue-500 cursor-pointer">
-        <h4 className="text-white text-sm" onClick={onClick}>
+      <div className="px-2 rounded hover-hover:hover:bg-blue-500">
+        <h4 className="text-white text-sm" onClick={toggle}>
           {moment(value).format(DATE_FORMAT)}
         </h4>
         <h6 className="text-gray-300 text-xs">{moment(timestamps[0]).format(DAY_FORMAT)}</h6>
@@ -175,20 +181,25 @@ const Dashboard = ({ onDayChanged }) => {
 
     const props = {
       selected: timestamps[0],
+      disabled: !isPaused,
       onSelect: handleDaySelect,
       onChange: () => {},
       popperClassName: 'dashboard-datepicker',
       popperPlacement: 'bottom',
       popperModifiers: popperModifiers,
       minDate: moment(dataStatus.first).toDate(),
-      maxDate: new Date()
+      maxDate: new Date(),
+      onCalendarClose: () => { setDatePickerOpen(false) },
+      onCalendarOpen: () => { setDatePickerOpen(true) }
     };
 
     return (
-      <DatePicker
-        {...props}
-        customInput={<DatePickerInput />}
-      />
+      <div className="datepicker cursor-pointer disabled:cursor-default" disabled={!isPaused}>
+        <DatePicker
+          {...props}
+          customInput={<DatePickerInput />}
+        />
+      </div>
     );
   };
 
