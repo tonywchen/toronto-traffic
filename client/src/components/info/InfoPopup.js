@@ -28,8 +28,18 @@ const InfoPopup = ({ minimize }) => {
               prediction data over time and transform the changes into traffic data, which are then displayed on a map. The computed data can be good indicators of
               the road traffic along the TTC routes.
             </p>
-            <p>
-              For more details on the techincal implementations and future considerations, please check out <a href="https://github.com/tonywchen/toronto-traffic" target="_blank" className="border-b border-dotted hover-hover:hover:bg-blue-500">TTCongestion Github</a>
+            <p className="pb-2">
+              For more details on the techincal implementations and future considerations, please check out Github repository for TTCongestion.
+            </p>
+            <p className="pb-2">
+              <a
+                href="https://github.com/tonywchen/toronto-traffic"
+                target="_blank"
+                rel="noreferrer"
+                className="border-b border-dotted hover-hover:hover:bg-blue-500"
+              >
+                TTCongestion Github
+              </a>
             </p>
           </section>
           <section className="pb-4">
@@ -59,24 +69,24 @@ const InfoPopup = ({ minimize }) => {
             <h4 className="font-bold pb-2">Data Definition</h4>
             <p className="pb-2">
               Each traffic data consists of the following information:
-              <ul className="my-2">
-                <li className="pl-2 py-1">
-                  <strong>Start/End Stops</strong>
-                  <br/>
-                  A start and end points, which map to a vehicle's preceding stop and current/upcoming stop
-                </li>
-                <li className="pl-2 py-1">
-                  <strong>Date/Time</strong>
-                  <br/>
-                  The beginning of the 5-minute interval the traffic data base its predictions from
-                </li>
-                <li className="pl-2 py-1">
-                  <strong>Congestion Level</strong>
-                  <br/>
-                  The average of number of seconds of how much all vehicles are ahead/behind compared to the preceding predictions
-                </li>
-              </ul>
             </p>
+            <ul className="pb-2">
+              <li className="pl-2 py-1">
+                <strong>Start/End Stops</strong>
+                <br/>
+                A start and end points, which map to a vehicle's preceding stop and current/upcoming stop
+              </li>
+              <li className="pl-2 py-1">
+                <strong>Date/Time</strong>
+                <br/>
+                The beginning of the 5-minute interval the traffic data base its predictions from
+              </li>
+              <li className="pl-2 py-1">
+                <strong>Congestion Level</strong>
+                <br/>
+                The average of number of seconds of how much all vehicles are ahead/behind compared to the preceding predictions
+              </li>
+            </ul>
           </section>
           <section className="pb-4">
             <h4 className="font-bold pb-2">Limitations</h4>
@@ -89,14 +99,14 @@ const InfoPopup = ({ minimize }) => {
             <h4 className="font-bold pb-2">Tech Stack</h4>
             <p className="pb-2">
               The project is built with:
-              <ul className="my-2">
-                <li className="pl-2 py-1"><strong>MongoDB</strong> for database</li>
-                <li className="pl-2 py-1"><strong>NodeJS</strong>/<strong>Express</strong>/<strong>Mongoose</strong> for backend server</li>
-                <li className="pl-2 py-1"><strong>ReactJS</strong>/<strong>Tailwind CSS</strong>/<strong>Mapbox GL JS</strong> for frontend logic, styling, and mapping visualization</li>
-                <li className="pl-2 py-1"><strong>NextBus API</strong> for TTC vehicle prediction data</li>
-                <li className="pl-2 py-1"><strong>Google Maps Directions API</strong> for routing data</li>
-              </ul>
             </p>
+            <ul className="pb-2">
+              <li className="pl-2 py-1"><strong>MongoDB</strong> for database</li>
+              <li className="pl-2 py-1"><strong>NodeJS</strong>/<strong>Express</strong>/<strong>Mongoose</strong> for backend server</li>
+              <li className="pl-2 py-1"><strong>ReactJS</strong>/<strong>Tailwind CSS</strong>/<strong>Mapbox GL JS</strong> for frontend logic, styling, and mapping visualization</li>
+              <li className="pl-2 py-1"><strong>NextBus API</strong> for TTC vehicle prediction data</li>
+              <li className="pl-2 py-1"><strong>Google Maps Directions API</strong> for routing data</li>
+            </ul>
           </section>
         </main>
       </div>

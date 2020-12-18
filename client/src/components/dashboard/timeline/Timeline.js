@@ -185,20 +185,20 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
     const message = (isCompletelyEmpty)
       ? `No historical traffic data can be found. `
       : `No traffic data today. `;
-    const offer = (isBeforeFirst && `Fast forward to first available date?`) || (isAfterLast && `Fast rewind to last available date?`) || ``;
+    const offer = (isBeforeFirst && `Fast forward to first available date?`) || (isAfterLast && `Rewind back to last available date?`) || ``;
     const action = `Jump to ${toDateString}`;
 
     return (
       <div
         className={`timeline py-6 lg:py-7 px-2 lg:px-3 flex justify-center`}>
         <div className={`timeline-info flex h-12 w-full max-w-screen-sm rounded bg-blue-500 bg-opacity-25 text-gray-300 ${justifyClass} items-center`}>
-          <div className={`px-2 lg:px-6 text-xs lg:text-sm`}>
+          <div className={`px-4 lg:px-6 text-xs lg:text-sm`}>
             { message }
             { offer }
           </div>
           <button
             onClick={() => jumpToDate(dataStatus.last)}
-            className={`h-full px-2 lg:px-6 rounded bg-blue-500 text-white text-xs lg:text-sm font-bold justify-center items-center ${hiddenClass}`}>
+            className={`h-full px-4 lg:px-6 rounded bg-blue-500 text-white text-xs lg:text-sm font-bold justify-center items-center ${hiddenClass}`}>
             { action }
           </button>
         </div>

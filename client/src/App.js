@@ -10,10 +10,6 @@ import Info from './components/info/Info';
 import { fetchTraffic, fetchPaths } from './actions/traffic';
 import { fetchSubroutes } from './actions/route';
 
-import './styles.scss';
-import './styles/tailwind.scss';
-import './styles/main.scss';
-
 const App = () => {
   const dispatch = useDispatch();
 

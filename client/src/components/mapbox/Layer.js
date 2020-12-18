@@ -27,7 +27,7 @@ const getTypeData = (type, data) => {
         type: 'line',
         layout: {
           'line-join': 'round',
-          'line-cap': 'square'
+          'line-cap': 'round'
         },
         paint: {
           'line-color': 'white',
@@ -47,7 +47,7 @@ const getTypeData = (type, data) => {
   return typeData;
 };
 
-const Layer = ({children, data, id, type, source}) => {
+const Layer = ({children, data, id, type, source, onClick}) => {
   const map = useContext(MapContext);
 
   useEffect(() => {
@@ -66,6 +66,10 @@ const Layer = ({children, data, id, type, source}) => {
       map.setPaintProperty(id, 'line-color', layer.paint['line-color']);
     } else {
       map.addLayer(layer);
+
+      if (onClick) {
+        map.on('click', id, onClick);
+      }
     }
   };
 

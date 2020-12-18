@@ -7,6 +7,8 @@ import { createStore, applyMiddleware, compose } from 'redux';
 import thunk from 'redux-thunk';
 
 import './styles.scss'
+import './styles/tailwind.scss';
+import './styles/main.scss';
 
 import App from './App';
 import rootReducer from './reducers';
