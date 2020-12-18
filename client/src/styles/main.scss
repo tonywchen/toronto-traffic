@@ -1,0 +1,109 @@
+.timeline {
+  // This is highly recommended for react-use-gesture drag gesture to prevent conflict
+  // between element drag and browser scroll events. However, note that there is
+  // an existing Chrome bug where a value other than 'auto' for `touch-action` causes
+  // drag events to be janky (https://github.com/pmndrs/react-use-gesture/issues/218)
+  touch-action: pan-x;
+}
+
+.react-datepicker-wrapper {
+  &::before {
+    display: block;
+    content: '';
+
+    margin: 0 auto;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+
+    border-bottom: 5px solid rgba(255, 255, 255, 0.25);
+  }
+
+  @media (hover: hover) {
+    &:hover::before {
+      opacity: 0;
+    }
+  }
+}
+
+
+.dashboard-datepicker {
+  .react-datepicker {
+    @apply bg-transparent;
+    @apply border-none;
+  }
+
+  .react-datepicker__navigation {
+    @apply my-3;
+    @apply mx-1;
+  }
+  .react-datepicker__navigation--previous {
+    --tw-border-opacity: 1;
+    border-right-color: rgba(229, 231, 235, var(--tw-border-opacity));
+  }
+  .react-datepicker__navigation--next {
+    --tw-border-opacity: 1;
+    border-left-color: rgba(229, 231, 235, var(--tw-border-opacity));
+  }
+  .react-datepicker__header {
+    @apply bg-black;
+    @apply bg-opacity-80;
+    @apply border-none;
+    @apply m-0;
+    @apply p-2;
+    @apply text-gray-200;
+  }
+  .react-datepicker__current-month {
+    @apply text-gray-300;
+    @apply my-3;
+  }
+  .react-datepicker__day-name {
+    @apply h-4;
+    @apply leading-4;
+    @apply m-0;
+    @apply p-0;
+    @apply text-gray-300;
+    @apply w-10;
+  }
+
+  .react-datepicker__month {
+    background-color: rgba(17, 17, 17, 1);
+    @apply border-none;
+    @apply m-0;
+    @apply p-2;
+    @apply text-white;
+  }
+
+  .react-datepicker__day {
+    @apply text-white;
+    @apply h-10;
+    @apply leading-10;
+    @apply m-0;
+    @apply p-0;
+    @apply w-10;
+  }
+  .react-datepicker__day:hover {
+    @apply bg-blue-500;
+    @apply bg-opacity-25;
+  }
+  .react-datepicker__day--selected {
+    @apply bg-blue-500;
+  }
+  .react-datepicker__day--keyboard-selected {
+    @apply bg-blue-500;
+    @apply bg-opacity-25;
+  }
+  .react-datepicker__day--disabled {
+    @apply text-white;
+    @apply text-opacity-20;
+  }
+
+  &[data-placement^="top"] .react-datepicker__triangle {
+    border-top-color: rgba(0, 0, 0, 0.8);
+    transform: translateX(4px); /* temp hack to ensure datepicker triangle is perfectly centred */
+  }
+  &[data-placement^="top"] .react-datepicker__triangle::before {
+    border-top-color: rgba(0, 0, 0, 0.8);
+  }
+}

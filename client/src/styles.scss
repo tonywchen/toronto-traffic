@@ -2,15 +2,3 @@
   --color-primary: rgb(217, 119, 6);
   --color-secondary: #2563eb;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-.timeline {
-  // This is highly recommended for react-use-gesture drag gesture to prevent conflict
-  // between element drag and browser scroll events. However, note that there is
-  // an existing Chrome bug where a value other than 'auto' for `touch-action` causes
-  // drag events to be janky (https://github.com/pmndrs/react-use-gesture/issues/218)
-  touch-action: pan-x;
-}
