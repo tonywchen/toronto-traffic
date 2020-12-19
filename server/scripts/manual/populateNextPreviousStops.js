@@ -213,4 +213,5 @@ const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
 
 (async () => {
   await convertPredictions(504);
+  process.exit(0);
 })();
