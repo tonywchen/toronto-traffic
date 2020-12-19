@@ -1,4 +1,5 @@
 const xml2js = require('xml2js');
+const _ = require('lodash');
 
 const axios = require('axios');
 axios.interceptors.request.use(function (config) {
@@ -158,6 +159,18 @@ const Nextbus = () => {
 
       return acc;
     }, {});
+
+    Object.values(groupedPredictions).forEach((trip) => {
+      const { predictions } = trip;
+      const predictionList = Object.values(predictions);
+
+      const nextStopTags = _.chain(predictionList)
+        .sortBy(({seconds}) => parseInt(seconds))
+        .map('stopTag')
+        .value();
+
+      trip.nextStopTags = nextStopTags;
+    });
 
     return {
       predictions: allStopPredictions,

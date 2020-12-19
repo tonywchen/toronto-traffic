@@ -6,6 +6,7 @@ const SystemSetting = require('../../../models/SystemSetting');
 
 const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes interval
 const MAX_TIME_RANGE = 24 * 60 * 60 * 1000; // limit script to process only at most 24 hours of data at a time
+const MINIMUM_TIMESTAMP = 1606539600000; // 2020-11-28
 
 /**
  * This script computes traffic data by taking prediction data in
@@ -30,44 +31,6 @@ const findRecentCompleteTimestamp = async (lastProcessed) => {
   return 0;
 };
 
-/**
- * This function iterates through trips and populates `nextStopTags`,
- * an array of stop tags representing an ordered list of the subsequent
- * stops for this trip. This array value is calculated using the
- * `predictions` data from the trip. `nextStopTags` will help determine
- * which stop a vehicle is coming from for a specific trip at a specific
- * time (see `populatePreviousStops` for more detail)
- * @param {*} lastProcessed
- * @param {*} maxTimestamp
- * @param {*} routeTag
- */
-const populateNextStopTags = async (lastProcessed, maxTimestamp, routeTag) => {
-  const unprocessedTrips = await Trip.find({
-    'timestamp': {
-      '$gte': lastProcessed,
-      '$lt': maxTimestamp
-    },
-    'routeTag': routeTag,
-    'nextStopTags': {
-      '$exists': false
-    }
-  });
-
-  let count = 1;
-  for (const unprocessedTrip of unprocessedTrips) {
-    const predictions = unprocessedTrip.get('predictions');
-
-    let nextStopTags = _.chain(Object.values(predictions))
-      .sortBy(({seconds}) => parseInt(seconds))
-      .map('stopTag')
-      .value();
-
-    unprocessedTrip.set('nextStopTags', nextStopTags);
-    await unprocessedTrip.save();
-
-    console.log(`${count++} of ${unprocessedTrips.length} saved!`);
-  }
-};
 
 /**
  * This function calculates which stop (ie. `previousStopTag`) a vehicle
@@ -100,43 +63,21 @@ const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
     }
   });
 
-  const pipeline = [{
-    '$match': {
-      'tripTag': {
-        '$in': tripTags
-      },
-      'timestamp': {
-        '$lt': maxTimestamp
-      },
-    }
-  }, {
-    '$sort': {
-      'timestamp': 1
-    }
-  }, {
-    '$group': {
-      '_id': '$tripTag',
-      'trips': {
-        '$push': '$$ROOT'
-      }
-    }
-  }, {
-    '$project': {
-      'tripTag': '$_id',
-      'trips': '$trips'
-    }
-  }];
-
   let count = 1;
-  const cursor = await Trip.aggregate(pipeline).allowDiskUse(true);
-  for (const result of cursor) {
+  for (const tripTag of tripTags) {
+    const trips = await Trip.find({
+      tripTag
+    }, null , {
+      sort: { timestamp: 1 }
+    }).lean();
+
     const last = {
       nextStopTags: [],
       previousStopTag: '',
       timestamp: 0
     };
 
-    for (const trip of result.trips) {
+    for (const trip of trips) {
       let timestamp = trip.timestamp;
       let nextStopTags = trip.nextStopTags || [];
       let previousStopTag = last.previousStopTag;
@@ -193,7 +134,7 @@ const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
       last.timestamp = timestamp;
     }
 
-    console.log(`[populatePreviousStops] ${count++} of ${cursor.length} trips saved!`);
+    console.log(`${count++} of ${tripTags.length} tripTags processed`);
   }
 };
 
@@ -414,10 +355,10 @@ const convertPredictions = async (routeTag) => {
   if (!routeTag) {
     return;
   }
-  const lastProcessed = await SystemSetting.findLastProcessed();
+  let lastProcessed = await SystemSetting.findLastProcessed();
+  lastProcessed = Math.max(MINIMUM_TIMESTAMP, lastProcessed);
   const maxTimestamp = await findRecentCompleteTimestamp(lastProcessed);
 
-  await populateNextStopTags(lastProcessed, maxTimestamp, routeTag);
   await populatePreviousStops(lastProcessed, maxTimestamp, routeTag);
 
   const tripIntervals = await findRecentTripIntervals(lastProcessed, maxTimestamp, routeTag);
@@ -429,6 +370,12 @@ const convertPredictions = async (routeTag) => {
     const traffic = computeTrafficByStop(predictionsByStop);
 
     trafficGroups.push(traffic);
+  }
+
+  if (trafficGroups.length) {
+    console.log(`Available predictions converted into traffic data...`);
+  } else {
+    console.log(`No available prediction data to convert.`);
   }
 
   return {

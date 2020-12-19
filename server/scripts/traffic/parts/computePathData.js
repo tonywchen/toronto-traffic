@@ -290,6 +290,8 @@ const computePathData = async (trafficGroups, maxTimestamp, debug = false) => {
   await compute.savePathStatuses(pathData);
 
   await SystemSetting.setLastProcessed(maxTimestamp);
+
+  console.log(`Traffic data persisted into the database`);
 };
 
 module.exports = computePathData;
