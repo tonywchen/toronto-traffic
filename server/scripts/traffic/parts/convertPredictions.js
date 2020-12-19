@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
 
-const Trip = require('../../models/nextbus/Trip');
-const SystemSetting = require('../../models/SystemSetting');
+const Trip = require('../../../models/nextbus/Trip');
+const SystemSetting = require('../../../models/SystemSetting');
 
 const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes interval
 const MAX_TIME_RANGE = 24 * 60 * 60 * 1000; // limit script to process only at most 24 hours of data at a time
@@ -20,9 +20,11 @@ const findRecentCompleteTimestamp = async (lastProcessed) => {
   if (result) {
     const { timestamp } = result;
     const roundedTimestamp = timestamp - timestamp % DEFAULT_TIME_RANGE;
-    const maxTimestamp = lastProcessed + MAX_TIME_RANGE;
 
-    return Math.min(roundedTimestamp, maxTimestamp);
+    let maxAllowedTimestmp = (lastProcessed + MAX_TIME_RANGE);
+    maxAllowedTimestmp = maxAllowedTimestmp - maxAllowedTimestmp % DEFAULT_TIME_RANGE;
+
+    return Math.min(roundedTimestamp, maxAllowedTimestmp);
   }
 
   return 0;
