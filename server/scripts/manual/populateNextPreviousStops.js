@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 
 const SystemSetting = require('../../models/SystemSetting');
 const Trip = require('../../models/nextbus/Trip');
@@ -17,8 +18,14 @@ const convertPredictions = async (routeTag) => {
   const lastProcessed = await SystemSetting.findLastProcessed();
   const maxTimestamp = await findRecentCompleteTimestamp(lastProcessed);
 
+  const fromDateString = moment(lastProcessed).format();
+  const toDateString = moment(lastProcessed).format();
+  console.log(`Processing trips between ${fromDateString} - ${toDateString}`);
+
   await populateNextStopTags(lastProcessed, maxTimestamp, routeTag);
   await populatePreviousStops(lastProcessed, maxTimestamp, routeTag);
+
+  console.log(`Finished processing trips between ${fromDateString} - ${toDateString}`);
 };
 
 /**
@@ -35,8 +42,8 @@ const findRecentCompleteTimestamp = async (lastProcessed) => {
     const { timestamp } = result;
     const roundedTimestamp = timestamp - timestamp % DEFAULT_TIME_RANGE;
 
-    // let maxAllowedTimestmp = (lastProcessed + MAX_TIME_RANGE);
-    // maxAllowedTimestmp = maxAllowedTimestmp - maxAllowedTimestmp % DEFAULT_TIME_RANGE;
+    let maxAllowedTimestmp = (lastProcessed + MAX_TIME_RANGE);
+    maxAllowedTimestmp = maxAllowedTimestmp - maxAllowedTimestmp % DEFAULT_TIME_RANGE;
 
     return roundedTimestamp;
   }
@@ -213,5 +220,4 @@ const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
 
 (async () => {
   await convertPredictions(504);
-  process.exit(0);
 })();
