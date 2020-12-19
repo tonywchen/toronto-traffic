@@ -1,7 +1,7 @@
-const NextbusService = require('../../services/Nextbus');
-const Trip = require('../../models/nextbus/Trip');
-const Stop = require('../../models/nextbus/Stop');
-const Vehicle = require('../../models/nextbus/Vehicle');
+const NextbusService = require('../../../services/Nextbus');
+const Trip = require('../../../models/nextbus/Trip');
+const Stop = require('../../../models/nextbus/Stop');
+const Vehicle = require('../../../models/nextbus/Vehicle');
 
 const nextbusService = NextbusService();
 
@@ -25,16 +25,13 @@ const fetchTrips = async (job) => {
   const stops = await findRouteStops(routeTag);
 
   const { groups } = await nextbusService.fetchPredictions(routeTag, '', stops, currentTimestamp);
-  let tripSize = 0;
   for (const groupKey of Object.keys(groups)) {
     const trip = groups[groupKey];
 
     const tripObj = new Trip(trip);
     await tripObj.save();
-
-    tripSize++;
   };
-t
+
   const vehicles = await nextbusService.fetchVehicles(routeTag);
   for (const vehicle of vehicles) {
     const vehicleObj = new Vehicle({
