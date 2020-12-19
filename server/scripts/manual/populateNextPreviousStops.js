@@ -35,10 +35,10 @@ const findRecentCompleteTimestamp = async (lastProcessed) => {
     const { timestamp } = result;
     const roundedTimestamp = timestamp - timestamp % DEFAULT_TIME_RANGE;
 
-    let maxAllowedTimestmp = (lastProcessed + MAX_TIME_RANGE);
-    maxAllowedTimestmp = maxAllowedTimestmp - maxAllowedTimestmp % DEFAULT_TIME_RANGE;
+    // let maxAllowedTimestmp = (lastProcessed + MAX_TIME_RANGE);
+    // maxAllowedTimestmp = maxAllowedTimestmp - maxAllowedTimestmp % DEFAULT_TIME_RANGE;
 
-    return Math.min(roundedTimestamp, maxAllowedTimestmp);
+    return roundedTimestamp;
   }
 
   return 0;
