@@ -1,21 +1,21 @@
 const {performance} = require('perf_hooks');
 const moment = require('moment-timezone');
 
+const tokens = require('../../configs/tokens.json');
+const GoogleMaps = require("@googlemaps/google-maps-services-js");
+const GoogleMapsClient = GoogleMaps.Client;
+const polyline = require('@mapbox/polyline');
+
 const Stop = require('../../../models/nextbus/Stop');
 const Path = require('../../../models/traffic/Path');
 const PathStatus = require('../../../models/traffic/PathStatus');
-
-const mbxClient = require('@mapbox/mapbox-sdk');
-const mbxDirections = require('@mapbox/mapbox-sdk/services/directions');
-
-const polyline = require('@mapbox/polyline');
-
-const tokens = require('../../configs/tokens.json');
 const SystemSetting = require('../../../models/SystemSetting');
-const baseClient = mbxClient({ accessToken: tokens.mapbox });
 
-const GoogleMaps = require("@googlemaps/google-maps-services-js");
-const GoogleMapsClient = GoogleMaps.Client;
+const bookmark = require('debug')('computePathData:bookmark');
+const benchmark = require('debug')('computePathData:benchmark');
+const benchmarkInner = require('debug')('computePathData:benchmarkInner');
+const benchmarkApi = require('debug')('computePathData:benchmarkApi');
+const inspect = require('debug')('computePathData:inspect');
 
 const mapObject = (obj, mapFn) => {
   const newObj = {};
@@ -93,6 +93,8 @@ const Compute = (debug = false) => {
   // TODO: add a fetch function in case
   // no stop data exists for a tag
   const findStopData = async (stopTags) => {
+    bookmark(`(findStopData)`);
+
     const stopData = {};
     for (const stopTag of stopTags) {
       stopData[stopTag] = null;
@@ -111,6 +113,7 @@ const Compute = (debug = false) => {
   };
 
   const preparePathData = async (allPaths) => {
+    bookmark(`(preparePathData)`);
     const pathData = {};
     for (const paths of allPaths) {
       for (const path of paths) {
@@ -129,6 +132,7 @@ const Compute = (debug = false) => {
   }
 
   const findOrPopulatePaths = async (pathData, stopData) => {
+    bookmark(`(findOrPopulatePaths)`);
     for (const pathDatum of Object.values(pathData)) {
       const isPathDatumFound = await findPathDatum(pathDatum);
 
@@ -160,9 +164,12 @@ const Compute = (debug = false) => {
     return false;
   };
   const populatePathDatum = async (pathDatum, stopData) => {
+    bookmark(`(populatePathDatum) from=${pathDatum.from} to=${pathDatum.to}`);
+
     const fromStopData = stopData[pathDatum.from];
     const toStopData = stopData[pathDatum.to];
 
+    benchmarkApi(`(populatePathDatum) googleMapsClient.directions`)
     const response = await googleMapsClient.directions({
       params: {
         origin: [fromStopData.lat, fromStopData.lon],
@@ -171,6 +178,7 @@ const Compute = (debug = false) => {
         mode: 'bicycling',
       }
     });
+    benchmarkApi(`(populatePathDatum) googleMapsClient.directions - end`);
 
     const result = processDirectionsResponse(response);
     if (!result.success) {
@@ -218,7 +226,11 @@ const Compute = (debug = false) => {
   };
 
   const savePathStatuses = async (pathData) => {
+    bookmark(`(savePathStatuses)`);
+
+    benchmark(`(savePathStatuses) ${Object.keys(pathData).length} pathData`);
     for (const {paths, obj} of Object.values(pathData)) {
+      benchmarkInner(`(savePathStatuses) ${paths.length} paths`);
       for (const path of paths) {
         const { pathStatus } = path;
 
@@ -233,7 +245,9 @@ const Compute = (debug = false) => {
           upsert: true
         });
       }
+      benchmarkInner(`(savePathStatuses) ${paths.length} paths - end`);
     }
+    benchmark(`(savePathStatuses) ${Object.keys(pathData).length} pathData - end`);
   };
 
   const _benchmark = (fn) => {
@@ -272,6 +286,7 @@ const computePathData = async (trafficGroups, maxTimestamp, debug = false) => {
   const allPaths = [];
   const stopTagMap = {};
 
+  bookmark(`(trafficToPathData)`);
   for (const traffic of trafficGroups) {
     const {paths, stopTags} = await compute.trafficToPathData(traffic);
 
@@ -289,9 +304,10 @@ const computePathData = async (trafficGroups, maxTimestamp, debug = false) => {
   await compute.findOrPopulatePaths(pathData, stopData);
   await compute.savePathStatuses(pathData);
 
+  bookmark(`(SystemSetting.setLastProcessed)`);
   await SystemSetting.setLastProcessed(maxTimestamp);
 
-  console.log(`Traffic data persisted into the database`);
+  bookmark(`(return)`);
 };
 
 module.exports = computePathData;

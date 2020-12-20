@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 const Trip = require('../../../models/nextbus/Trip');
 const SystemSetting = require('../../../models/SystemSetting');
 
+const bookmark = require('debug')('convertPrediction:bookmark');
+const benchmark = require('debug')('convertPrediction:benchmark');
+const inspect = require('debug')('convertPrediction:inspect');
+
 const DEFAULT_TIME_RANGE = 5 * 60 * 1000; // 5 minutes interval
 const MAX_TIME_RANGE = 24 * 60 * 60 * 1000; // limit script to process only at most 24 hours of data at a time
 const MINIMUM_TIMESTAMP = 1606539600000; // 2020-11-28
@@ -16,19 +20,24 @@ const MINIMUM_TIMESTAMP = 1606539600000; // 2020-11-28
  * the return value to limit the prediction data query.
  */
 const findRecentCompleteTimestamp = async (lastProcessed) => {
-  const result = await Trip.findOne().sort('-timestamp');
+  bookmark(`(findRecentCompleteTimestamp)`);
 
-  if (result) {
-    const { timestamp } = result;
+  const lastTrip = await Trip.findOne().sort('-timestamp');
+  let result = 0;
+
+  if (lastTrip) {
+    const { timestamp } = lastTrip;
     const roundedTimestamp = timestamp - timestamp % DEFAULT_TIME_RANGE;
 
     let maxAllowedTimestmp = (lastProcessed + MAX_TIME_RANGE);
     maxAllowedTimestmp = maxAllowedTimestmp - maxAllowedTimestmp % DEFAULT_TIME_RANGE;
 
-    return Math.min(roundedTimestamp, maxAllowedTimestmp);
+    result = Math.min(roundedTimestamp, maxAllowedTimestmp);
   }
 
-  return 0;
+  inspect(`(findRecentCompleteTimestamp) return ${result}`);
+
+  return result;
 };
 
 
@@ -49,6 +58,9 @@ const findRecentCompleteTimestamp = async (lastProcessed) => {
  * @param {*} routeTag the route whose trips to populate
  */
 const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
+  bookmark(`(populatePreviousStops)`);
+
+  benchmark(`(populatePreviousStops) tripTags`);
   const tripTags = await Trip.distinct('tripTag', {
     'timestamp': {
       '$gte': lastProcessed,
@@ -62,14 +74,16 @@ const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
       '$exists': false
     }
   });
+  benchmark(`(populatePreviousStops) tripTags - ${tripTags.length}`);
 
-  let count = 1;
   for (const tripTag of tripTags) {
+    benchmark(`(populatePreviousStops) tripTags:${tripTag}:trips`);
     const trips = await Trip.find({
       tripTag
     }, null , {
       sort: { timestamp: 1 }
     }).lean();
+    benchmark(`(populatePreviousStops) tripTags:${tripTag}:trips ${trips.length}`);
 
     const last = {
       nextStopTags: [],
@@ -133,14 +147,14 @@ const populatePreviousStops = async (lastProcessed, maxTimestamp, routeTag) => {
       last.previousStopTag = previousStopTag;
       last.timestamp = timestamp;
     }
-
-    console.log(`${count++} of ${tripTags.length} tripTags processed`);
   }
 };
 
 
 // TODO: find a way to avoid/reduce `allowDiskUse`
 const findRecentTripIntervals = async (lastProcessed, maxTimestamp, routeTag) => {
+  bookmark(`(findRecentTripIntervals)`);
+
   const pipeline = [{
     '$match': {
       'timestamp': {
@@ -177,7 +191,10 @@ const findRecentTripIntervals = async (lastProcessed, maxTimestamp, routeTag) =>
   }];
 
   const tripIntervals = [];
+  // TODO: this query is slow and memory intensive, need to fix
+  benchmark(`(findRecentTripIntervals) tripIntervals`);
   const cursor = await Trip.aggregate(pipeline).allowDiskUse(true);
+  benchmark(`(findRecentTripIntervals) tripIntervals - ${cursor.length}`);
   await cursor.forEach((result) => {
     tripIntervals.push(result);
   });
@@ -363,6 +380,8 @@ const convertPredictions = async (routeTag) => {
 
   const tripIntervals = await findRecentTripIntervals(lastProcessed, maxTimestamp, routeTag);
   const trafficGroups = [];
+
+  bookmark(`(tripIntervals loop)`);
   for (const { interval, trips } of tripIntervals) {
     const predictions = flattenTripsToPredictions(trips, interval);
     const predictionsByStop = groupPredictionsByStops(predictions);
@@ -372,12 +391,9 @@ const convertPredictions = async (routeTag) => {
     trafficGroups.push(traffic);
   }
 
-  if (trafficGroups.length) {
-    console.log(`Available predictions converted into traffic data...`);
-  } else {
-    console.log(`No available prediction data to convert.`);
-  }
+  inspect(`return trafficGroups.length=${trafficGroups.length}`);
 
+  bookmark(`(return)`);
   return {
     trafficGroups,
     maxTimestamp
