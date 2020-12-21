@@ -109,4 +109,5 @@ A few future features/enhancements that have been considered:
 ## Client
 - **ReactJS/React Hook/Redux** for frontend framework
 - **Tailwind CSS** for styling
+- **React UseGesture** for timeline mouse/touch interactions
 - **Mapbox GL JS** for mapping visualization
