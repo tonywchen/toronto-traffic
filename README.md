@@ -83,6 +83,7 @@ Some optimizations have been made to trim the data to 50GB for now. Will need to
 
 # Future
 A few future features/enhancements that have been considered:
+- clean up background scripts to re-usability (some codes can be more DRY and use better debugging)
 - Add more transit routes (more pretty-looking data!)
 - Interactive mapping elements (opens up more user interactivity)
 - Additional path detail and historical trends (would be interesting to see how a particular path does compared to another)
@@ -102,6 +103,7 @@ A few future features/enhancements that have been considered:
 ## Server
 - **Node.js/Express** to serve traffic data
 - **Agenda** for scheduling background jobs
+- **Debug** for background job debugging and benchmarking
 - **Mongoose** for ORM
 
 ## Client
