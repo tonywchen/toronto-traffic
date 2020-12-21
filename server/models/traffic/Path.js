@@ -20,7 +20,11 @@ const pathSchema = new Schema({
   legs: Array, // Array of coordinates [longitudes, latitudes],
   polyline: String,
   lastUpdated: Number,
-  version: String
+  version: String,
+  valid: {
+    type: Boolean,
+    default: true
+  }
 });
 
 const preSaveOrUpdateFn = function (next) {

@@ -1,5 +1,8 @@
+const _ = require('lodash');
+
 const Path = require('../models/traffic/Path');
 const PathStatus = require('../models/traffic/PathStatus');
+const PathRoute = require('../models/traffic/PathRoute');
 
 const ROUND_DOWN = 0;
 const ROUND_UP = 1;
@@ -43,7 +46,8 @@ class TrafficService {
 
   async getPaths() {
     const pathDocs = await Path.find({
-      version: Path.VERSION
+      version: Path.VERSION,
+      valid: true
     });
 
     const paths = pathDocs.map((pathDoc) => {
@@ -73,7 +77,8 @@ class TrafficService {
         timestamp: {
           '$gte': from,
           '$lt': to
-        }
+        },
+        'path.valid': true
       },
     }, {
       '$group': {
@@ -133,6 +138,45 @@ class TrafficService {
     const lastPathStatus = await PathStatus.findOne({}).sort({timestamp: -1});
 
     return lastPathStatus;
+  }
+
+  async checkPathAgainstPathRoute(from, to, routeTag) {
+    const exists = await PathRoute.exists({routeTag});
+    if (!exists) {
+      return true;
+    }
+
+    const pathRouteDocs = await PathRoute.find({
+      routeTag,
+      'stops.tag': {
+        '$all': [from, to]
+      }
+    });
+
+    for (const pathRouteDoc of pathRouteDocs) {
+      const stops = pathRouteDoc.get('stops');
+      const fromIndex = _.findIndex(stops, {tag: from});
+      const toIndex = _.findIndex(stops, {tag: to});
+
+      if (fromIndex > toIndex) {
+        continue;
+      }
+
+      const numStopsBetween = toIndex - fromIndex;
+      const totalDuration = _.chain(stops)
+        .slice(fromIndex + 1, toIndex + 1)
+        .sumBy('duration')
+        .value();
+
+      console.log(`${stops[fromIndex].title} - ${stops[toIndex].title} (${from}-${to})`)
+      console.log(`  ${totalDuration}`);
+
+      if (totalDuration < 10 * 60 && numStopsBetween < 5) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 
