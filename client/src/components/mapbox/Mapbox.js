@@ -7,7 +7,11 @@ import MapContext from '../common/MapContext';
 const DEFAULT = {
   lng: -79.39823201128098,
   lat: 43.6404135590131,
-  zoom: 12.22
+  zoom: 12.22,
+  bounds: [
+    [-79.33653822635407, 43.68403908190626],
+    [-79.46197886176948, 43.59920256784201]
+  ]
 };
 
 const Mapbox = ({ children }) => {
@@ -19,13 +23,19 @@ const Mapbox = ({ children }) => {
     const mapInstance = new MapboxGl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/dark-v10',
-      center: [DEFAULT.lng, DEFAULT.lat],
-      zoom: DEFAULT.zoom
+      // center: [DEFAULT.lng, DEFAULT.lat],
+      // zoom: DEFAULT.zoom,
+      bounds: DEFAULT.bounds
     });
     setMap(mapInstance);
 
     mapInstance.on('load', () => {
       setReady(true);
+    });
+
+    mapInstance.on('moveend', (e) => {
+      console.log(mapInstance.getCenter());
+      console.log(mapInstance.getZoom());
     });
 
     return () => {
