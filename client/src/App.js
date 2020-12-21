@@ -8,14 +8,9 @@ import Dashboard from './components/dashboard/Dashboard';
 import Info from './components/info/Info';
 
 import { fetchTraffic, fetchPaths } from './actions/traffic';
-import { fetchSubroutes } from './actions/route';
 
 const App = () => {
   const dispatch = useDispatch();
-
-  const dispatchFetchSubroutes = () => {
-    return dispatch(fetchSubroutes());
-  }
 
   const dispatchFetchTraffic = (newTime) => {
     return dispatch(fetchTraffic(newTime));
@@ -25,10 +20,11 @@ const App = () => {
     return dispatch(fetchPaths());
   };
 
-  useEffect(async () => {
-    // await dispatchFetchSubroutes();
-    await dispatchFetchPaths();
-    await dispatchFetchTraffic();
+  useEffect(() => {
+    (async () => {
+      await dispatchFetchPaths();
+      await dispatchFetchTraffic();
+    })();
   }, []);
 
   return (
