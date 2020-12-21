@@ -66,6 +66,28 @@ const InfoPopup = ({ minimize }) => {
             </div>
           </section>
           <section className="pb-4">
+            <h4 className=" font-bold pb-2">Timline Controls</h4>
+            <p className="pb-2">
+              The Date Selector allows the user to increment/decrement the current date, or jump to any valid date. Any change to the current date will trigger a network request to load new daily traffic data.
+            </p>
+            <p className="pb-2">
+              The Timeline Playback allows the user to scroll and/or animate the daily traffic data similar to a music player. A bar-chart preview is also present to offer a summary of traffic data throughout the day.
+              The bar chart displays the data in the following format:
+            </p>
+            <ul className="pb-2">
+              <li className="pl-2 py-1">
+                <strong>Activity</strong>
+                <br/>
+                The activity is represented by the height of the bar. Shorter bar means low activity and fewer TTC vehicles, and a taller bar indicates high activity and more TTC vehicles.
+              </li>
+              <li className="pl-2 py-1">
+                <strong>Congestion Level</strong>
+                <br/>
+                The congestion level is represented by the colour of the bar.
+              </li>
+            </ul>
+          </section>
+          <section className="pb-4">
             <h4 className="font-bold pb-2">Data Definition</h4>
             <p className="pb-2">
               Each traffic data consists of the following information:
