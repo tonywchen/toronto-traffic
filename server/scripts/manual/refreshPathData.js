@@ -21,6 +21,7 @@ const Subroute = require('../../models/nextbus/Subroute');
 const Stop = require('../../models/nextbus/Stop');
 const Path = require('../../models/traffic/Path');
 const PathStatus = require('../../models/traffic/PathStatus');
+const TrafficService = require('../../services/Traffic');
 
 const polyline = require('@mapbox/polyline');
 const tokens = require('../configs/tokens.json');
@@ -28,12 +29,24 @@ const tokens = require('../configs/tokens.json');
 const GoogleMaps = require("@googlemaps/google-maps-services-js");
 const GoogleMapsClient = GoogleMaps.Client;
 
+const bookmark = require('debug')('bookmark');
+const benchmark = require('debug')('benchmark');
+const inspect = require('debug')('inspect');
+
+// should accept the following command line arguments:
+// --populate    - to populate paths based on existing Nextbus routes (not very useful when there are lots of data already)
+// --validate    - to validate existing paths against path routes (check modelPathRoute.js)
+// --direction   - to re-fetch all directions data
+const yargs = require('yargs/yargs');
+const argv = yargs(process.argv).argv;
+
 mongoose.connect('mongodb://localhost:27017/toronto-traffic', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
 const populatePaths = async () => {
+  bookmark(`(populatePaths)`);
   const paths = await Path.find().lean();
   const pathMap = {};
   paths.forEach(({ from, to, legs }) => {
@@ -86,10 +99,39 @@ const populatePaths = async () => {
     });
   }
 
-  console.log(`${missingPathIdentifiers.length} missing paths have been automatically generated`);
+  inspect(`(populatePaths) ${missingPathIdentifiers.length} missing paths generated`);
 };
 
+const validatePaths = async () => {
+  bookmark(`(validatePaths)`);
+  const TrafficServiceInstance = new TrafficService();
+
+  const paths = await Path.find().lean();
+  inspect(`(validatePaths) paths.length: ${paths.length}`);
+
+  for (const path of paths) {
+    const {from, to} = path;
+    const isPathValid = await TrafficServiceInstance.checkPathAgainstPathRoute(from, to, '504');
+
+    await Path.updateMany({
+      from,
+      to
+    }, {
+      valid: isPathValid
+    });
+
+    const res = await PathStatus.updateMany({
+      'path.from': from,
+      'path.to': to
+    }, {
+      'path.valid': isPathValid
+    });
+    inspect(`(validatePaths) ${from}-${to}: ${res.nModified} path statuses updated`);
+  }
+}
+
 const fetchDirections = async () => {
+  bookmark(`(fetchDirections)`);
   const googleMapsClient = new GoogleMapsClient({});
 
   const stopMap = {};
@@ -98,7 +140,11 @@ const fetchDirections = async () => {
     stopMap[stop.tag] = stop;
   }
 
-  const paths = await Path.find();
+  const paths = await Path.find({
+    valid: true
+  });
+  inspect(`(fetchDirections) paths.length: ${paths.length}`);
+
   let counter = 0;
   for (const path of paths) {
     const pathFrom = path.get('from');
@@ -138,29 +184,14 @@ const fetchDirections = async () => {
     });
 
     counter++;
-    console.log(`${counter} of ${paths.length} updated`);
+
+    if (counter % 10 === 0) {
+      inspect(`(fetchDirections) ${counter} of ${paths.length} paths updated`);
+    }
   }
-}
+};
 
 const processDirectionsResponse = (response) => {
-  /* const responseLegs = response.data.routes[0].legs || [];
-  const transitStep = responseLegs[0].steps.find((step) => {
-    return step['travel_mode'] === 'TRANSIT'
-  });
-
-  let polylineObj;
-  if (!transitStep) {
-    polylineObj = response.data.routes[0].overview_polyline;
-  } else {
-    polylineObj = transitStep.polyline;
-  }
-
-  if (!polylineObj) {
-    return {
-      success: false
-    };
-  } */
-
   const polylineObj = response.data.routes[0].overview_polyline;
   const polylineValue = polylineObj.points;
 
@@ -187,6 +218,19 @@ const processDirectionsResponse = (response) => {
 
 
 (async () => {
-  await populatePaths();
-  await fetchDirections();
+  if (argv.populate) {
+    await populatePaths();
+  }
+
+  if (argv.validate) {
+    await validatePaths();
+  }
+
+  if (argv.direction) {
+    await fetchDirections();
+  }
+
+  benchmark(`(return)`);
 })();
+
+// DEBUG=bookmark,benchmark,inspect node scripts/manual/refreshPathData.js --populate --validate --direction

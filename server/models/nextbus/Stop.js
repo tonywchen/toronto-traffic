@@ -5,7 +5,8 @@ const Stop = mongoose.model('Stop', {
   title: String, // title of the stop (eg. Queen Street West at Spadina Ave)
   routeTag: String, // tag identifying the route (eg. '504') the stop belongs to
   lon: Number, // longitude of the stop
-  lat: Number, // latitude of the stop
+  lat: Number, // latitude of the stop,
+  endpoint: Number // 0/null for not endpoints, 1 for starting, 2 for terminal
 });
 
 module.exports = Stop;
