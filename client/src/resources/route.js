@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const SERVER_URL = 'http://192.168.86.88:3000';
+import { SERVER_URL } from '../config';
 
 const connect = () => {
   return axios.create({

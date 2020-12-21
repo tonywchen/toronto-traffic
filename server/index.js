@@ -7,17 +7,18 @@ const mainRoute = require('./routes/index');
 const trafficRoute = require('./routes/traffic');
 const routeRoute = require('./routes/route');
 
-const corsOptions = {
-  origin: 'http://192.168.86.88:3001'
-};
+const config = require('./config.json')
+const host = config.server.host;
+const port = config.server.port;
+const domain = config.domain;
 
-app.use(cors());
-app.use(mainRoute);
+const corsOptions = {
+  origin: domain
+};
+app.use(cors(corsOptions));app.use(mainRoute);
+
 app.use(trafficRoute);
 app.use(routeRoute);
-
-const baseUrl = 'http://0.0.0.0';
-const port = 3000;
 
 mongoose.connect('mongodb://localhost:27017/toronto-traffic', {
   // useFindAndModify: false,
@@ -26,5 +27,5 @@ mongoose.connect('mongodb://localhost:27017/toronto-traffic', {
 });
 
 app.listen(port, () => {
-  console.log(`Server listening at ${baseUrl}:${port}`)
+  console.log(`TTCongestion listening at ${host}:${port}`)
 })
