@@ -163,7 +163,7 @@ const Dashboard = ({ onDayChanged }) => {
     return (
       <div className="px-2 rounded hover-hover:hover:bg-blue-500">
         <h4 className="text-white text-sm" onClick={toggle}>
-          {moment(value).format(DATE_FORMAT)}
+          {moment(timestamps[0]).format(DATE_FORMAT)}
         </h4>
         <h6 className="text-gray-300 text-xs">{moment(timestamps[0]).format(DAY_FORMAT)}</h6>
       </div>

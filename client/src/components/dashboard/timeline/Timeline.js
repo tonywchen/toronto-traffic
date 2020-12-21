@@ -61,6 +61,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
   const initialized = useSelector(store => store.timeline.initialized);
   const timestamps = useSelector(store => store.timeline.timestamps);
   const dataStatus = useSelector(store => store.timeline.dataStatus);
+  const isTimelineLoading = useSelector(store => store.timeline.loading);
 
   const [lookupTime, setLookupTime] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -139,12 +140,12 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
               {
                 !paused &&
                 [SPEED.FAST, SPEED.NORMAL, SPEED.SLOW].map((s, index) => {
-                  const bgColorClass = (s.value === speed) ? 'bg-blue-800' : 'bg-gray-900';
+                  const bgColorClass = (s.value === speed) ? 'bg-blue-500' : 'bg-gray-900';
                   const textClass = (s.value === speed) ? 'text-xs text-white font-bold' : 'text-xs text-gray-300 font-bold';
 
                   return (
                     <button
-                      className={`align-middle ${textClass} w-12 h-8 ${bgColorClass} hover-hover:hover:bg-blue-500`}
+                      className={`align-middle ${textClass} w-12 h-8 ${bgColorClass} hover-hover:hover:bg-blue-500 hover-hover:hover:bg-opacity-50`}
                       key={s.value}
                       onClick={() => changeSpeed(s.value)}
                     >
@@ -207,11 +208,13 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
   };
 
   const renderTimeline = () => {
+    const opacityClass = (isTimelineLoading)? 'opacity-50' : '';
+
     return (
       <div
-        className={`timeline relative`}
+        className={`timeline relative ${opacityClass}`}
         ref={timelineRef}>
-        <div className="timeline__track relative h-16 w-full" {...bind()}>
+        <div className={`timeline__track relative h-16 w-full`} {...bind()}>
           <Preview />
           <Ruler domain={domain} dragging={dragging}/>
           <Playhead domain={domain} lookupTime={lookupTime} dragging={dragging} />

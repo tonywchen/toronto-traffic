@@ -34,7 +34,7 @@ const Ruler = (props) => {
           }
 
           if (isTimelineLoading) {
-            borderBaseClass = 'border-r border-gray-500 border-opacity-20'
+            borderBaseClass = 'border-r border-gray-500 border-opacity-50'
             animationBaseClass = 'animate-pulse';
             style.animationDelay = `${index / props.domain.length}s`;
             style.animationDuration = '1s';
