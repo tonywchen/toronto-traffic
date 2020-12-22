@@ -168,10 +168,8 @@ class TrafficService {
         .sumBy('duration')
         .value();
 
-      console.log(`${stops[fromIndex].title} - ${stops[toIndex].title} (${from}-${to})`)
-      console.log(`  ${totalDuration}`);
-
-      if (totalDuration < 10 * 60 && numStopsBetween < 5) {
+      // re-evaluate the restrictions in the future
+      if (totalDuration < 5 * 60 && numStopsBetween < 3) {
         return true;
       }
     }

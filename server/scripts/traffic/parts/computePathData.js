@@ -11,7 +11,7 @@ const Path = require('../../../models/traffic/Path');
 const PathStatus = require('../../../models/traffic/PathStatus');
 const SystemSetting = require('../../../models/SystemSetting');
 
-const TrafficService = require('../../services/Traffic');
+const TrafficService = require('../../../services/Traffic');
 const TrafficServiceInstance = new TrafficService();
 
 const bookmark = require('debug')('computePathData:bookmark');
