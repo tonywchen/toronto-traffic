@@ -11,6 +11,9 @@ const Path = require('../../../models/traffic/Path');
 const PathStatus = require('../../../models/traffic/PathStatus');
 const SystemSetting = require('../../../models/SystemSetting');
 
+const TrafficService = require('../../services/Traffic');
+const TrafficServiceInstance = new TrafficService();
+
 const bookmark = require('debug')('computePathData:bookmark');
 const benchmark = require('debug')('computePathData:benchmark');
 const benchmarkInner = require('debug')('computePathData:benchmarkInner');
@@ -185,12 +188,15 @@ const Compute = (debug = false) => {
       return;
     }
 
+    // TODO: remove hardcoded routeTag here
+    const isPathValid = await TrafficServiceInstance.checkPathAgainstPathRoute(pathDatum.from, pathDatum.to, '504');
     const updatedPathObj = await Path.findOneAndUpdate({
       from: pathDatum.from,
       to: pathDatum.to
     }, {
       legs: result.legs,
-      polyline: result.polyline
+      polyline: result.polyline,
+      valid: isPathValid
     }, {
       new: true,
       upsert: true
@@ -198,6 +204,7 @@ const Compute = (debug = false) => {
 
     pathDatum.legs = result.legs;
     pathDatum.polyline = result.polyline;
+    pathDatum.valid = isPathValid;
     pathDatum.obj = updatedPathObj;
   };
   const processDirectionsResponse = (response) => {
