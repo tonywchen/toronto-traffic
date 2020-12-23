@@ -55,6 +55,7 @@ const TrafficMap = () => {
             from: datum.path.from,
             to: datum.path.to,
             timestamp: snapshot.timestamp,
+            average: average,
             legs
           }
         };
@@ -63,12 +64,17 @@ const TrafficMap = () => {
         pathMap[pathId] = pathMap[pathId] || {
           layerData,
           sourceData
-        }
+        };
 
         pathMap[pathId].layerData = {
           ...layerData,
           lineColor: colour,
-          lineWidth: 3,
+          // lineWidth: 3,
+          lineWidth: [
+            'interpolate', ['linear'], ['zoom'],
+            12, 0.5,
+            14, 3
+          ],
           lineOffset: 5,
           opacity
         };

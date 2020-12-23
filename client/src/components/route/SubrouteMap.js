@@ -13,7 +13,12 @@ const SubrouteMap = () => {
 
   const layerData = {
     lineColor: "#222222",
-    lineWidth: 5,
+    // lineWidth: 5,
+    lineWidth: [
+      'interpolate', ['linear'], ['zoom'],
+      12, 1,
+      14, 5
+    ],
     lineOffset: 5
   };
 

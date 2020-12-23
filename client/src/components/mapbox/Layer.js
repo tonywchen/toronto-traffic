@@ -12,7 +12,8 @@ const getTypeData = (type, data) => {
         type: 'line',
         layout: {
           'line-join': 'round',
-          'line-cap': 'round'
+          'line-cap': 'round',
+          'line-round-limit': 2
         },
         paint: {
           'line-color': 'white',

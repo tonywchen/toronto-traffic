@@ -35,7 +35,7 @@ const Feature = ({children, data, id, type}) => {
       case 'LineString':
         return createLine(data, id)
       case 'FeatureCollection':
-        return createCollection(data, id, type);
+        return createCollection();
       default:
         return null;
     }
@@ -54,7 +54,7 @@ const Feature = ({children, data, id, type}) => {
     };
   };
 
-  const createCollection = (data, id) => {
+  const createCollection = () => {
     const sourceData = {
       type: 'FeatureCollection',
       features: []
@@ -66,8 +66,6 @@ const Feature = ({children, data, id, type}) => {
         sourceData.features.push(feature);
       }
     });
-
-    console.log(sourceData);
 
     return sourceData;
   };
