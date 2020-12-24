@@ -13,6 +13,15 @@ const TRAFFIC_COLOUR = (score) => {
   }
 };
 
+let numberId = 1;
+const pathToNumberIdMap = {};
+const getNumberIdFromPath = (from, to) => {
+  const identifier = `${from}_${to}`;
+  pathToNumberIdMap[identifier] = pathToNumberIdMap[identifier] || numberId++;
+
+  return pathToNumberIdMap[identifier];
+};
+
 const TrafficMap = () => {
   const trafficByTimestamp = useSelector(store => store.traffic.trafficByTimestamp);
   const selectedTime = useSelector(store => store.timeline.selected);
@@ -61,9 +70,11 @@ const TrafficMap = () => {
         };
 
         const pathId = `${datum.path.from}_${datum.path.to}`;
+        const featureId = getNumberIdFromPath(datum.path.from, datum.path.to); // Mapbox feature id has to be numerical
         pathMap[pathId] = pathMap[pathId] || {
           layerData,
-          sourceData
+          sourceData,
+          featureId
         };
 
         pathMap[pathId].layerData = {
@@ -74,6 +85,12 @@ const TrafficMap = () => {
             'interpolate', ['linear'], ['zoom'],
             12, 0.5,
             14, 3
+          ],
+          lineWidth: [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            6,
+            3
           ],
           lineOffset: 5,
           opacity
@@ -89,10 +106,9 @@ const TrafficMap = () => {
   const renderTrafficPaths = () => {
     const pathMap = pathMapRef.current;
     return Object.keys(pathMap).map((pathId) => {
-      const { layerData, sourceData } = pathMap[pathId];
+      const { layerData, sourceData, featureId } = pathMap[pathId];
       return (
-        <Layer type="line" data={layerData} id={pathId} source={pathId} key={pathId} onClick={onPathClicked}>
-          <Feature data={sourceData} id={pathId} type="LineString"/>
+          <Feature data={sourceData} id={pathId} featureId={featureId} type="LineString"/>
         </Layer>
       )
     });
