@@ -46,7 +46,7 @@ const Layer = ({children, data, id, type, source, onClick, onMousemove, onMousel
     };
   }, []);
 
-  const addOrUpdateLayer = (id, layer) => {
+  const addOrUpdateLayer = (id, layer, source) => {
     const existingLayer = map.getLayer(id);
     if (existingLayer) {
       map.setPaintProperty(id, 'line-color', layer.paint['line-color']);
@@ -58,7 +58,7 @@ const Layer = ({children, data, id, type, source, onClick, onMousemove, onMousel
       }
 
       const customEventData = {
-        sourceId: id,
+        sourceId: source,
         map,
         mapAttrs
       };
@@ -94,7 +94,7 @@ const Layer = ({children, data, id, type, source, onClick, onMousemove, onMousel
       }
     });
 
-    addOrUpdateLayer(id, layer);
+    addOrUpdateLayer(id, layer, source);
   }
 
   return null;

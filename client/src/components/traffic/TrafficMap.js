@@ -126,22 +126,35 @@ const TrafficMap = () => {
         12, 0.5,
         14, 3
       ],
-      /* lineWidth: [
-        'case',
-        ['boolean', ['feature-state', 'hover'], false],
-        6,
-        3
-      ], */
-      lineOffset: 5,
+      lineOffset: 10,
     };
     const layerId = `path-lines-${selectedTime}`;
 
     const hitboxLayerData = {
-      lineColor: 'rgba(255, 255, 255, 0.5)',
-      lineWidth: 5,
-      lineOffset: 5
+      lineColor: 'transparent',
+      lineWidth: 20,
+      lineOffset: 15
     };
-    const hitboxLayerId = `path-hitbox-${selectedTime}`;
+    const hitboxLayerId = `path-hitboxes-${selectedTime}`;
+
+    const highlightLayerData = {
+      lineColor: [
+        'step', ['get', 'average'],
+        '#8CC788',
+        -10,
+        '#FAC758',
+        10,
+        '#F9874E'
+      ],
+      lineWidth: [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        10,
+        0
+      ],
+      lineOffset: 10
+    };
+    const highlightLayerId = `path-highlights-${selectedTime}`;
 
     const sourceId = `paths-${selectedTime}`;
 
@@ -163,9 +176,13 @@ const TrafficMap = () => {
           id={layerId}
           source={sourceId}
           key={layerId}
-          onClick={onPathClicked}
-          onMousemove={onPathMousemove}
-          onMouseleave={onPathMouseleave}
+        />
+        <Layer
+          type="line"
+          data={highlightLayerData}
+          id={highlightLayerId}
+          source={sourceId}
+          key={highlightLayerId}
         />
         <Layer
           type="line"
@@ -182,31 +199,31 @@ const TrafficMap = () => {
   };
 
   const onPathClicked = (e) => {
-    /* var coordinates = e.features[0].geometry.coordinates.slice();
-    var description = e.features[0].properties.description;
-
-    // Ensure that if the map is zoomed out such that multiple
-    // copies of the feature are visible, the popup appears
-    // over the copy being pointed to.
-    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    }
-
-    new mapboxgl.Popup()
-      .setLngLat(coordinates)
-      .setHTML(description)
-      .addTo(map); */
-
     console.log(e);
     console.log(e.features[0].properties);
   };
 
   const onPathMousemove = (e, data) => {
-    const { map, mapAttrs, sourceId } = data;
+    const { map, mapAttrs } = data;
     map.getCanvas().style.cursor = 'pointer';
+
+    const { hoverStateId } = mapAttrs;
+    if (hoverStateId) {
+      const sourceId = `paths-${selectedTime}`;
+
+      map.setFeatureState(
+        { source: sourceId, id: hoverStateId },
+        { hover: false }
+      );
+
+      mapAttrs.hoverStateId = null;
+    }
+
 
     if (e.features.length > 0) {
       mapAttrs.hoverStateId = e.features[0].id;
+      console.log(`e.features[0].id: ${e.features[0].id}`);
+      const sourceId = `paths-${selectedTime}`;
 
       map.setFeatureState(
         { source: sourceId, id: mapAttrs.hoverStateId },
@@ -215,11 +232,13 @@ const TrafficMap = () => {
     }
   };
   const onPathMouseleave = (e, data) => {
-    const { map, mapAttrs, sourceId } = data;
+    const { map, mapAttrs } = data;
     const { hoverStateId } = mapAttrs;
     map.getCanvas().style.cursor = '';
 
     if (hoverStateId) {
+      const sourceId = `paths-${selectedTime}`;
+
       map.setFeatureState(
         { source: sourceId, id: hoverStateId },
         { hover: false }
