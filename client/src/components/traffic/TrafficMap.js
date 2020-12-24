@@ -26,8 +26,6 @@ const TrafficMap = () => {
   const trafficByTimestamp = useSelector(store => store.traffic.trafficByTimestamp);
   const selectedTime = useSelector(store => store.timeline.selected);
 
-  const pathMapRef = React.useRef({});
-
   const computeTrafficSnapshots = () => {
     const traffic = trafficByTimestamp[selectedTime];
     return (traffic)
@@ -36,14 +34,14 @@ const TrafficMap = () => {
   };
 
   const buildTrafficPaths = (snapshots) => {
-    const pathMap = pathMapRef.current;
+    const pathMap = {};
     Object.values(pathMap).forEach((path) => {
       path.layerData = path.layerData || {};
       path.layerData.lineColor = 'transparent';
     });
 
     if (snapshots.length === 0) {
-      return;
+      return {};
     }
 
     snapshots.forEach((snapshot, index) => {
@@ -79,7 +77,15 @@ const TrafficMap = () => {
 
         pathMap[pathId].layerData = {
           ...layerData,
-          lineColor: colour,
+          // lineColor: colour,
+          lineColor: [
+            'step', ['get', 'average'],
+            '#8CC788',
+            -10,
+            '#FAC758',
+            10,
+            '#F9874E'
+          ],
           // lineWidth: 3,
           lineWidth: [
             'interpolate', ['linear'], ['zoom'],
@@ -101,18 +107,78 @@ const TrafficMap = () => {
         };
       });
     });
+
+    return pathMap;
   };
 
-  const renderTrafficPaths = () => {
-    const pathMap = pathMapRef.current;
-    return Object.keys(pathMap).map((pathId) => {
-      const { layerData, sourceData, featureId } = pathMap[pathId];
-      return (
-        <Layer type="line" data={layerData} id={pathId} source={pathId} key={pathId} onClick={onPathClicked} onMousemove={onPathMousemove} onMouseleave={onPathMouseleave}>
-          <Feature data={sourceData} id={pathId} featureId={featureId} type="LineString"/>
-        </Layer>
-      )
-    });
+  const renderTrafficPaths = (pathMap) => {
+    const layerData = {
+      lineColor: [
+        'step', ['get', 'average'],
+        '#8CC788',
+        -10,
+        '#FAC758',
+        10,
+        '#F9874E'
+      ],
+      lineWidth: [
+        'interpolate', ['linear'], ['zoom'],
+        12, 0.5,
+        14, 3
+      ],
+      /* lineWidth: [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        6,
+        3
+      ], */
+      lineOffset: 5,
+    };
+    const layerId = `path-lines-${selectedTime}`;
+
+    const hitboxLayerData = {
+      lineColor: 'rgba(255, 255, 255, 0.5)',
+      lineWidth: 5,
+      lineOffset: 5
+    };
+    const hitboxLayerId = `path-hitbox-${selectedTime}`;
+
+    const sourceId = `paths-${selectedTime}`;
+
+    return (
+      <>
+        <Feature type="FeatureCollection" id={sourceId}>
+          {
+            Object.keys(pathMap).map((pathId) => {
+              const { sourceData, featureId } = pathMap[pathId];
+              return (
+                <Feature data={sourceData} id={pathId} featureId={featureId} key={pathId} type="LineString"/>
+              );
+            })
+          }
+        </Feature>
+        <Layer
+          type="line"
+          data={layerData}
+          id={layerId}
+          source={sourceId}
+          key={layerId}
+          onClick={onPathClicked}
+          onMousemove={onPathMousemove}
+          onMouseleave={onPathMouseleave}
+        />
+        <Layer
+          type="line"
+          data={hitboxLayerData}
+          id={hitboxLayerId}
+          source={sourceId}
+          key={hitboxLayerId}
+          onClick={onPathClicked}
+          onMousemove={onPathMousemove}
+          onMouseleave={onPathMouseleave}
+        />
+      </>
+    );
   };
 
   const onPathClicked = (e) => {
@@ -167,10 +233,10 @@ const TrafficMap = () => {
     return null;
   }
 
-  buildTrafficPaths(computeTrafficSnapshots());
+  const pathMap = buildTrafficPaths(computeTrafficSnapshots());
 
   return (
-    renderTrafficPaths()
+    renderTrafficPaths(pathMap)
   );
 };
 

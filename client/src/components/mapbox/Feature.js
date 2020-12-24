@@ -31,10 +31,10 @@ const Feature = ({children, data, id, featureId, type}) => {
     }
   };
 
-  const createFeature = (type) => {
+  const createFeature = (data, id, featureId, type) => {
     switch (type) {
       case 'LineString':
-        return createLine()
+        return createLine(data, id, featureId)
       case 'FeatureCollection':
         return createCollection();
       default:
@@ -42,7 +42,7 @@ const Feature = ({children, data, id, featureId, type}) => {
     }
   };
 
-  const createLine = () => {
+  const createLine = (data, id, featureId) => {
     return {
       type: 'Feature',
       properties: {
@@ -63,7 +63,7 @@ const Feature = ({children, data, id, featureId, type}) => {
     };
 
     React.Children.forEach(children, (child) => {
-      const feature = createFeature(child.props.data, child.props.id, child.props.type);
+      const feature = createFeature(child.props.data, child.props.id, child.props.featureId, child.props.type);
       if (feature) {
         sourceData.features.push(feature);
       }
@@ -72,7 +72,7 @@ const Feature = ({children, data, id, featureId, type}) => {
     return sourceData;
   };
 
-  const sourceData = createFeature(type);
+  const sourceData = createFeature(data, id, featureId, type);
   addOrUpdateSource(id, sourceData);
 
   return null;

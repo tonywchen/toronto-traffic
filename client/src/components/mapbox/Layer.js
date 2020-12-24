@@ -48,7 +48,6 @@ const Layer = ({children, data, id, type, source, onClick, onMousemove, onMousel
 
   const addOrUpdateLayer = (id, layer) => {
     const existingLayer = map.getLayer(id);
-
     if (existingLayer) {
       map.setPaintProperty(id, 'line-color', layer.paint['line-color']);
     } else {
