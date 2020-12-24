@@ -1,7 +1,8 @@
 import React from 'react';
 
 const mapContext = React.createContext({
-  value: null
+  map: null,
+  mapAttrs: null
 });
 
 export default mapContext;

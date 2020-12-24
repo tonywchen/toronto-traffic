@@ -108,6 +108,7 @@ const TrafficMap = () => {
     return Object.keys(pathMap).map((pathId) => {
       const { layerData, sourceData, featureId } = pathMap[pathId];
       return (
+        <Layer type="line" data={layerData} id={pathId} source={pathId} key={pathId} onClick={onPathClicked} onMousemove={onPathMousemove} onMouseleave={onPathMouseleave}>
           <Feature data={sourceData} id={pathId} featureId={featureId} type="LineString"/>
         </Layer>
       )
@@ -132,6 +133,34 @@ const TrafficMap = () => {
 
     console.log(e);
     console.log(e.features[0].properties);
+  };
+
+  const onPathMousemove = (e, data) => {
+    const { map, mapAttrs, sourceId } = data;
+    map.getCanvas().style.cursor = 'pointer';
+
+    if (e.features.length > 0) {
+      mapAttrs.hoverStateId = e.features[0].id;
+
+      map.setFeatureState(
+        { source: sourceId, id: mapAttrs.hoverStateId },
+        { hover: true }
+      );
+    }
+  };
+  const onPathMouseleave = (e, data) => {
+    const { map, mapAttrs, sourceId } = data;
+    const { hoverStateId } = mapAttrs;
+    map.getCanvas().style.cursor = '';
+
+    if (hoverStateId) {
+      map.setFeatureState(
+        { source: sourceId, id: hoverStateId },
+        { hover: false }
+      );
+
+      mapAttrs.hoverStateId = null;
+    }
   };
 
   if (!Number.isInteger(selectedTime)) {

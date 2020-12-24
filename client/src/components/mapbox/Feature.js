@@ -1,8 +1,9 @@
 import React, { useContext, useEffect } from 'react';
 import MapContext from '../common/MapContext';
 
-const Feature = ({children, data, id, type}) => {
-  const map = useContext(MapContext);
+const Feature = ({children, data, id, featureId, type}) => {
+  const {map, mapAttrs} = useContext(MapContext);
+
   useEffect(() => {
     return () => {
       if (map && map.getSource(id)) {
