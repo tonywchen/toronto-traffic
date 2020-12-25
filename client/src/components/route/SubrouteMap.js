@@ -19,7 +19,7 @@ const SubrouteMap = () => {
       12, 1,
       14, 5
     ],
-    lineOffset: 5
+    lineOffset: 6
   };
 
   return (
