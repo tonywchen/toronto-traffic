@@ -25,17 +25,19 @@ const Mapbox = ({ children }) => {
       style: 'mapbox://styles/mapbox/dark-v10',
       // center: [DEFAULT.lng, DEFAULT.lat],
       // zoom: DEFAULT.zoom,
-      bounds: DEFAULT.bounds
+      bounds: DEFAULT.bounds,
     });
     setMap(mapInstance);
 
     mapInstance.on('load', () => {
       setReady(true);
-    });
 
-    mapInstance.on('moveend', (e) => {
-      console.log(mapInstance.getCenter());
-      console.log(mapInstance.getZoom());
+      // A hack to disabled touchscreen tap-and-drag zoom behaviour introduced
+      // in Mapbox GL JS v2. The default timing (ie. time between taps) is
+      // too long and introduced unintentional tap behaviour and there is no
+      // way to change the timing or only disabled tag-and-drag throuhg the
+      // official API.
+      mapInstance.touchZoomRotate._tapDragZoom._enabled = false;
     });
 
     return () => {
