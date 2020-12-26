@@ -1,16 +1,14 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+
 import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
+import { TRAFFIC_COLOUR_STEPS } from '../common/Util';
 
 const LAYER_DATA = {
   lineColor: [
     'step', ['get', 'average'],
-    '#8CC788', // green/low traffic
-    -10,
-    '#FAC758', // yellow/normal traffic
-    10,
-    '#F9874E', // red/high traffic
+    ...TRAFFIC_COLOUR_STEPS
   ],
   lineWidth: [
     'interpolate', ['linear'], ['zoom'],
@@ -27,11 +25,7 @@ const HITBOX_LAYER_DATA = {
 const HIGHLIGHT_LAYER_DATA = {
   lineColor: [
     'step', ['get', 'average'],
-    '#8CC788',
-    -10,
-    '#FAC758',
-    10,
-    '#F9874E'
+    ...TRAFFIC_COLOUR_STEPS
   ],
   lineWidth: [
     'case',
