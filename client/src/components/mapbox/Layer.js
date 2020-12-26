@@ -12,7 +12,8 @@ const getTypeData = (type, data) => {
         type: 'line',
         layout: {
           'line-join': 'round',
-          'line-cap': 'round'
+          'line-cap': 'round',
+          'line-round-limit': 2
         },
         paint: {
           'line-color': 'white',
@@ -34,8 +35,8 @@ const getTypeData = (type, data) => {
   return typeData;
 };
 
-const Layer = ({children, data, id, type, source, onClick}) => {
-  const map = useContext(MapContext);
+const Layer = ({children, data, id, type, source, onClick, onMousemove, onMouseleave}) => {
+  const {map, mapAttrs} = useContext(MapContext);
 
   useEffect(() => {
     return () => {
@@ -45,9 +46,8 @@ const Layer = ({children, data, id, type, source, onClick}) => {
     };
   }, []);
 
-  const addOrUpdateLayer = (id, layer) => {
+  const addOrUpdateLayer = (id, layer, source) => {
     const existingLayer = map.getLayer(id);
-
     if (existingLayer) {
       map.setPaintProperty(id, 'line-color', layer.paint['line-color']);
     } else {
@@ -56,6 +56,21 @@ const Layer = ({children, data, id, type, source, onClick}) => {
       if (onClick) {
         map.on('click', id, onClick);
       }
+
+      const customEventData = {
+        sourceId: source,
+        map,
+        mapAttrs
+      };
+
+      if (onMousemove) {
+        map.on('mousemove', id, (e) => onMousemove(e, customEventData));
+      }
+
+      if (onMouseleave) {
+        map.on('mouseleave', id, (e) => onMouseleave(e, customEventData));
+      }
+
     }
   };
 
@@ -79,7 +94,7 @@ const Layer = ({children, data, id, type, source, onClick}) => {
       }
     });
 
-    addOrUpdateLayer(id, layer);
+    addOrUpdateLayer(id, layer, source);
   }
 
   return null;

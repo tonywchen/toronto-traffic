@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import MapContext from '../common/MapContext';
 
 const Metadata = () => {
-  const map = useContext(MapContext);
+  const {map} = useContext(MapContext);
 
   const [lng, setLng] = useState(0);
   const [lat, setLat] = useState(0);

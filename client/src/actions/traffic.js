@@ -9,16 +9,7 @@ import {
   SET_TIMELINE_DATA_STATUS
 } from './types';
 import resource from '../resources/traffic';
-
-const TRAFFIC_COLOUR = (score) => {
-  if (score > 3) {
-    return '#F9874E'; // red
-  } else if (score < -3) {
-    return '#8CC788'; // green
-  } else {
-    return '#FAC758'; // yellow
-  }
-};
+import { TrafficToColour } from '../components/common/Util'
 
 const trafficTransformer = (source) => {
   return (timestamps) => {
@@ -43,7 +34,7 @@ const trafficTransformer = (source) => {
 
       const totalWeight = _.sumBy(element.data, 'weight');
       const totalScore = _.sumBy(element.data, 'score');
-      const color = TRAFFIC_COLOUR(totalScore / totalWeight);
+      const color = TrafficToColour(totalScore / totalWeight);
       const x = totalWeight / max;
 
       return {
