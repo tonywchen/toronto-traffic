@@ -6,7 +6,8 @@ import {
   UPDATE_TIMELINE,
   REFRESH_TIMELINE,
   SET_TIMELINE_PREVIEW,
-  SET_TIMELINE_DATA_STATUS
+  SET_TIMELINE_DATA_STATUS,
+  FETCH_PATH_DETAIL
 } from './types';
 import resource from '../resources/traffic';
 import { TrafficToColour } from '../components/common/Util'
@@ -104,5 +105,24 @@ export const fetchPaths = () => {
       payload: response.data
     });
   }
-}
+};
+
+export const fetchPathDetail = (from, to, timestamp) => {
+  return async (dispatch) => {
+    dispatch({
+      type: FETCH_PATH_DETAIL_INITIALIZED,
+      payload: {
+        from,
+        to,
+        timestamp
+      }
+    });
+
+    const response = await resource.fetchPathDetail(from, to, timestamp);
+    dispatch({
+      type: FETCH_PATH_DETAIL,
+      payload: response.data
+    });
+  };
+};
 

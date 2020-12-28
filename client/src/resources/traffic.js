@@ -24,7 +24,10 @@ const traffic = {
   },
   fetchPaths: () => {
     return connect().get(`${SERVER_URL}/paths`);
-  }
+  },
+  fetchPathDetail: (from, to, timestamp) => {
+    return connect().get(`${SERVER_URL}/paths/${from}/to/${to}?timestamp=${timestamp}`);
+  },
 };
 
 export default traffic;

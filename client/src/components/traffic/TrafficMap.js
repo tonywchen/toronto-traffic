@@ -5,11 +5,13 @@ import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
 import { TRAFFIC_COLOUR_STEPS } from '../common/Util';
 
+const LINE_COLOUR_STEPPED = [
+  'step', ['get', 'average'],
+  ...TRAFFIC_COLOUR_STEPS
+];
+
 const LAYER_DATA = {
-  lineColor: [
-    'step', ['get', 'average'],
-    ...TRAFFIC_COLOUR_STEPS
-  ],
+  lineColor: LINE_COLOUR_STEPPED,
   lineWidth: [
     'interpolate', ['linear'], ['zoom'],
     12, 0.5,
@@ -23,10 +25,7 @@ const HITBOX_LAYER_DATA = {
   lineOffset: 15
 };
 const HIGHLIGHT_LAYER_DATA = {
-  lineColor: [
-    'step', ['get', 'average'],
-    ...TRAFFIC_COLOUR_STEPS
-  ],
+  lineColor: LINE_COLOUR_STEPPED,
   lineWidth: [
     'case',
     ['boolean', ['feature-state', 'hover'], false],
