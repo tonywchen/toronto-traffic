@@ -1,4 +1,4 @@
-const mockSearchBetween = jest.fn(); // (() => Promise.resolve({}));
+const mockSearchBetween = jest.fn();
 jest.mock('../services/Traffic', () => {
   return {
     searchBetween: mockSearchBetween
@@ -51,8 +51,8 @@ describe('Test the `/traffic` path', () => {
   });
 
   test('It should throw an error when given invalid dates', async () => {
-    const fromDate = '2020-12-155';
-    const toDate = '2020-12-166';
+    const fromDate = '2020-13-15';
+    const toDate = '2020-13-16';
     const params = `fromDate=${fromDate}&toDate=${toDate}`;
 
     const response = await request(app).get(`/traffic?${params}`);

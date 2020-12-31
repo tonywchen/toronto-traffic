@@ -20,19 +20,8 @@ router.get('/traffic', async (req, res) => {
     const traffic = await TrafficService.searchBetween(fromDate, toDate);
     res.send(traffic);
   } catch (e) {
-    console.error(e.stack);
     res.status(400).send({ error: e.message });
   }
 });
-
-router.get('/paths', async (req, res) => {
-  try {
-    const paths = await TrafficService.getPaths();
-    res.send(paths);
-  } catch (e) {
-    console.error(e.stack);
-    res.status(400).send({ error: e.message });
-  }
-})
 
 module.exports = router;
