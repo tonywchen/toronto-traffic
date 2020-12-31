@@ -40,25 +40,6 @@ const validateTimeRange = (from, to) => {
 };
 
 const TrafficService = {
-  getPaths: async () => {
-    const pathDocs = await Path.find({
-      version: Path.VERSION,
-      valid: true
-    });
-
-    const paths = pathDocs.map((pathDoc) => {
-      return {
-        from: pathDoc.from,
-        to: pathDoc.to,
-        legs: pathDoc.legs
-      };
-    });
-
-    return {
-      paths
-    };
-  },
-
   searchBetween: async (from, to) => {
     if (!from || !to) {
       const defaultTimeRange = await getDefaultTimeRange();
