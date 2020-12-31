@@ -39,12 +39,8 @@ const validateTimeRange = (from, to) => {
   }
 };
 
-class TrafficService {
-  constructor() {
-
-  }
-
-  async getPaths() {
+const TrafficService = {
+  getPaths: async () => {
     const pathDocs = await Path.find({
       version: Path.VERSION,
       valid: true
@@ -61,9 +57,9 @@ class TrafficService {
     return {
       paths
     };
-  }
+  },
 
-  async searchBetween(from, to) {
+  searchBetween: async (from, to) => {
     if (!from || !to) {
       const defaultTimeRange = await getDefaultTimeRange();
       from = defaultTimeRange.from;
@@ -116,8 +112,8 @@ class TrafficService {
     }];
 
     const recentPathStatuses = await PathStatus.aggregate(pathStatusPipeline);
-    const firstPathStatus = await this.getFirstPathStatus();
-    const lastPathStatus = await this.getLastPathStatus();
+    const firstPathStatus = await TrafficService.getFirstPathStatus();
+    const lastPathStatus = await TrafficService.getLastPathStatus();
 
     return {
       from: from,
@@ -126,21 +122,21 @@ class TrafficService {
       first: firstPathStatus.timestamp || 0,
       last: lastPathStatus.timestamp || 0
     };
-  }
+  },
 
-  async getFirstPathStatus() {
+  getFirstPathStatus: async () => {
     const firstPathStatus = await PathStatus.findOne({}).sort({timestamp: 1});
 
     return firstPathStatus;
-  }
+  },
 
-  async getLastPathStatus() {
+  getLastPathStatus: async () => {
     const lastPathStatus = await PathStatus.findOne({}).sort({timestamp: -1});
 
     return lastPathStatus;
-  }
+  },
 
-  async checkPathAgainstPathRoute(from, to, routeTag) {
+  checkPathAgainstPathRoute: async (from, to, routeTag) => {
     const exists = await PathRoute.exists({routeTag});
     if (!exists) {
       return true;
@@ -176,6 +172,6 @@ class TrafficService {
 
     return false;
   }
-}
+};
 
 module.exports = TrafficService;

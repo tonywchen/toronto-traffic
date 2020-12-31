@@ -10,8 +10,6 @@ const Trip = require('../../models/nextbus/Trip');
 const PathNode = require('../../models/traffic/PathNode');
 const PathRoute = require('../../models/traffic/PathRoute');
 
-const TrafficService = require('../../services/Traffic');
-
 // should accept the following command line arguments:
 // --full    - `true` to re-generate all path nodes and path routes, or `false` to just re-generate path routes
 const yargs = require('yargs/yargs');
