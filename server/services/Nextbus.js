@@ -18,42 +18,37 @@ axios.interceptors.response.use(function (response) {
   return Promise.reject(error);
 });
 
-const baseUrl = 'http://webservices.nextbus.com/service/publicXMLFeed?';
+const BASE_URL = 'http://webservices.nextbus.com/service/publicXMLFeed?';
+const AGENCY = 'ttc';
 
-const Nextbus = () => {
-  this.agency = 'ttc';
+const buildQueryString = ({ command, params = {} }) => {
+  const paramStringList = Object.keys(params).map((key) => {
+    const value = params[key];
 
-  const _buildQueryString = ({ command, params = {} }) => {
-    const paramStringList = Object.keys(params).map((key) => {
-      const value = params[key];
-
-      if (value == undefined || value == null) {
-        return '';
-      } else {
-        if (!Array.isArray(value)) {
-          return `${key}=${value}`;
-        }
-
-        const arrayParamStringList = value.map((v) => {
-          return `${key}=${v}`;
-        });
-
-        return arrayParamStringList.join('&');
+    if (value == undefined || value == null) {
+      return '';
+    } else {
+      if (!Array.isArray(value)) {
+        return `${key}=${value}`;
       }
-    });
 
-    paramStringList.unshift(`command=${command}`);
+      const arrayParamStringList = value.map((v) => {
+        return `${key}=${v}`;
+      });
 
-    return paramStringList.join('&');
-  };
+      return arrayParamStringList.join('&');
+    }
+  });
 
-  this.getCurrentTimestamp = () => {
-    return new Date().getTime();
-  };
+  paramStringList.unshift(`command=${command}`);
 
-  this.fetch = async ({ command, params = {} }) => {
-    const queryString = _buildQueryString({ command, params });
-    const requestUrl = baseUrl + queryString;
+  return paramStringList.join('&');
+};
+
+const NextbusService = {
+  fetch: async ({ command, params = {} }) => {
+    const queryString = buildQueryString({ command, params });
+    const requestUrl = BASE_URL + queryString;
 
     try {
       const response = await axios.get(requestUrl);
@@ -63,15 +58,15 @@ const Nextbus = () => {
     } catch (e) {
       throw e;
     }
-  };
+  },
 
-  this.fetchRoute = async (route) => {
+  fetchRoute: async (route) => {
     const params = {
-      a: this.agency,
+      a: AGENCY,
       r: route
     };
 
-    const result = await this.fetch({
+    const result = await NextbusService.fetch({
       command: 'routeConfig',
       params: params
     });
@@ -95,9 +90,9 @@ const Nextbus = () => {
       stops,
       directions
     };
-  };
+  },
 
-  this.fetchPredictions = async (route, directionTag, stops, currentTimestamp) => {
+  fetchPredictions: async (route, directionTag, stops, currentTimestamp) => {
     if (!stops) {
       return null;
     };
@@ -107,11 +102,11 @@ const Nextbus = () => {
     });
 
     const params = {
-      a: this.agency,
+      a: AGENCY,
       stops: compoundStops
     };
 
-    const result = await this.fetch({
+    const result = await NextbusService.fetch({
       command: 'predictionsForMultiStops',
       params: params
     });
@@ -176,15 +171,15 @@ const Nextbus = () => {
       predictions: allStopPredictions,
       groups: groupedPredictions
     };
-  };
+  },
 
-  this.fetchVehicles = async (route) => {
+  fetchVehicles: async (route) => {
     const params = {
-      a: this.agency,
+      a: AGENCY,
       r: route
     };
 
-    const result = await this.fetch({
+    const result = await NextbusService.fetch({
       command: 'vehicleLocations',
       params: params
     });
@@ -194,9 +189,7 @@ const Nextbus = () => {
     });
 
     return vehicles;
-  };
-
-  return this;
+  },
 };
 
-module.exports = Nextbus;
+module.exports = NextbusService;
