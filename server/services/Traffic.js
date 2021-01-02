@@ -1,6 +1,5 @@
 const _ = require('lodash');
 
-const Path = require('../models/traffic/Path');
 const PathStatus = require('../models/traffic/PathStatus');
 const PathRoute = require('../models/traffic/PathRoute');
 
@@ -34,6 +33,9 @@ const getDefaultTimeRange = async () => {
 }
 
 const validateTimeRange = (from, to) => {
+  if (to < from) {
+    throw new Error('Please ensure `from` value is not larger than `to` value');
+  }
   if (to - from > MAX_TIME_RANGE) {
     throw new Error('Please specify a time range shorter than a day');
   }
