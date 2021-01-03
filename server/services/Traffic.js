@@ -20,70 +20,92 @@ const roundToNearestMinute = (timestamp, rounding=ROUND_DOWN) => {
 const getDefaultTimeRange = async () => {
   const mostRecentPathStatus = await PathStatus.findOne().sort('-timestamp');
   if (!mostRecentPathStatus) {
-    return [];
+    return {};
   }
 
   const mostRecentTimestamp = mostRecentPathStatus.timestamp;
   const roundedTimestamp = roundToNearestMinute(mostRecentTimestamp, ROUND_UP);
 
-  from = roundedTimestamp - 60 * MINUTE_IN_MILLISECONDS;
-  to = roundedTimestamp;
+  const start = roundedTimestamp - 60 * MINUTE_IN_MILLISECONDS;
+  const end = roundedTimestamp;
 
-  return { from, to };
+  return { start, end };
 }
 
-const validateTimeRange = (from, to) => {
-  if (to < from) {
-    throw new Error('Please ensure `from` value is not larger than `to` value');
+const validateTimeRange = (startTimestamp, endTimestamp) => {
+  if (endTimestamp < startTimestamp) {
+    throw new Error('Please ensure `startTimestamp` value is not larger than `endTimestamp` value');
   }
-  if (to - from > MAX_TIME_RANGE) {
+  if (endTimestamp - startTimestamp > MAX_TIME_RANGE) {
     throw new Error('Please specify a time range shorter than a day');
   }
 };
 
 const TrafficService = {
-  searchBetween: async (from, to) => {
-    if (!from || !to) {
+  searchBetween: async (startTimestamp, endTimestamp) => {
+    if (!startTimestamp || !endTimestamp) {
       const defaultTimeRange = await getDefaultTimeRange();
-      from = defaultTimeRange.from;
-      to = defaultTimeRange.to;
+      startTimestamp = defaultTimeRange.start;
+      endTimestamp = defaultTimeRange.end;
     }
 
-    validateTimeRange(from, to);
+    validateTimeRange(startTimestamp, endTimestamp);
 
     const pathStatusPipeline = [{
       '$match': {
         timestamp: {
-          '$gte': from,
-          '$lt': to
+          '$gte': startTimestamp,
+          '$lt': endTimestamp
         },
         'path.valid': true
       },
     }, {
       '$group': {
         '_id': {
-          // 'timestamp': '$timestamp',
-          'interval': '$interval'
+          'interval': '$interval',
+          'from': '$path.from',
+          'to': '$path.to'
+        },
+        'legs': {'$first': '$legs'},
+        'weight': {'$sum': '$weight'},
+        'score': {'$sum': '$score'},
+      }
+    }, {
+      '$sort': { // this sort mostly helps with more predictable testing data
+        '_id.from': 1,
+        '_id.to': 1
+      }
+    }, {
+      '$project': {
+        '_id': '$_id',
+        'legs': '$legs',
+        'weight': '$weight',
+        'score': '$score',
+        'average': {
+          '$divide': ['$score', '$weight']
+        },
+      }
+    }, {
+      '$group': {
+        '_id': {
+          'interval': '$_id.interval',
         },
         'data': {
           '$push': {
             'path': {
-              'from': '$path.from',
-              'to': '$path.to',
-              'legs': '$path.legs'
+              'from': '$_id.from',
+              'to': '$_id.to',
+              'legs': '$legs',
             },
             'weight': '$weight',
             'score': '$score',
-            'average': {
-              '$divide': ['$score', '$weight']
-            }
+            'average': '$average'
           }
         }
       }
     }, {
       '$project': {
         '_id': 0,
-        // 'timestamp': '$_id.timestamp',
         'timestamp': '$_id.interval',
         'interval': '$_id.interval',
         'data': '$data'
@@ -99,8 +121,8 @@ const TrafficService = {
     const lastPathStatus = await TrafficService.getLastPathStatus();
 
     return {
-      from: from,
-      to: to,
+      startTimestamp,
+      endTimestamp,
       results: recentPathStatuses,
       first: firstPathStatus.timestamp || 0,
       last: lastPathStatus.timestamp || 0

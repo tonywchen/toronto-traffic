@@ -13,16 +13,16 @@ const TrafficService = require('./Traffic');
 describe('Test the Traffic Service', () => {
   describe('Test Traffic.searchBetween method', () => {
     const validTimeRange = {
-      from: 1606798800000, // 2020-12-01 05:00:00 UTC
-      to: 1606885200000 // 2020-12-02 05:00:00 UTC
+      startTimestamp: 1606798800000, // 2020-12-01 05:00:00 UTC
+      endTimestamp: 1606885200000 // 2020-12-02 05:00:00 UTC
     };
     const negativeTimeRange = {
-      from: 1606798800000, // 2020-12-01 05:00:00 UTC
-      to: 1606798799000 // 2020-12-01 04:59:59 UTC
+      startTimestamp: 1606798800000, // 2020-12-01 05:00:00 UTC
+      endTimestamp: 1606798799000 // 2020-12-01 04:59:59 UTC
     };
     const tooLargeTimeRange = {
-      from: 1606798800000, // 2020-12-01 05:00:00 UTC
-      to: 1606885201000 // 2020-12-02 05:00:01 UTC
+      startTimestamp: 1606798800000, // 2020-12-01 05:00:00 UTC
+      endTimestamp: 1606885201000 // 2020-12-02 05:00:01 UTC
     };
     const firstPathStatus = {
       timestamp: 1606798500000
@@ -46,16 +46,16 @@ describe('Test the Traffic Service', () => {
     });
 
     it('should successfully return properly formatted result when inputs are valid', async () => {
-      const { from, to } = validTimeRange;
+      const { startTimestamp, endTimestamp } = validTimeRange;
 
-      const result = await TrafficService.searchBetween(from, to);
+      const result = await TrafficService.searchBetween(startTimestamp, endTimestamp);
 
       expect(mockAggregate).toHaveBeenCalledTimes(1);
       expect(TrafficService.getFirstPathStatus).toHaveBeenCalledTimes(1);
       expect(TrafficService.getLastPathStatus).toHaveBeenCalledTimes(1);
 
-      expect(result.from).toEqual(from);
-      expect(result.to).toEqual(to);
+      expect(result.startTimestamp).toEqual(startTimestamp);
+      expect(result.endTimestamp).toEqual(endTimestamp);
       expect(result.results[0].timestamp).toEqual(1606798800000);
       expect(result.results[0].interval).toEqual(1606798800000);
       expect(result.results[0].data).toEqual([]);
@@ -63,14 +63,18 @@ describe('Test the Traffic Service', () => {
       expect(result.last).toEqual(1606885500000);
     });
     it('should throw an error if `from` input is after `to` input', async () => {
-      const { from, to } = negativeTimeRange;
+      const { startTimestamp, endTimestamp } = negativeTimeRange;
 
-      expect(TrafficService.searchBetween(from, to)).rejects.toEqual(new Error('Please ensure `from` value is not larger than `to` value'));
+      expect(TrafficService.searchBetween(startTimestamp, endTimestamp))
+        .rejects
+        .toEqual(new Error('Please ensure `startTimestamp` value is not larger than `endTimestamp` value'));
     });
     it('should throw an error if `from` and `to` range is too big', async () => {
-      const { from, to } = tooLargeTimeRange;
+      const { startTimestamp, endTimestamp } = tooLargeTimeRange;
 
-      expect(TrafficService.searchBetween(from, to)).rejects.toEqual(new Error('Please specify a time range shorter than a day'));
+      expect(TrafficService.searchBetween(startTimestamp, endTimestamp))
+        .rejects
+        .toEqual(new Error('Please specify a time range shorter than a day'));
     });
   });
 });

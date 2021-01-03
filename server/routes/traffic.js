@@ -17,7 +17,10 @@ router.get('/traffic', async (req, res) => {
       throw new Error('"fromDate" must not be larger than "toDate"');
     }
 
-    const traffic = await TrafficService.searchBetween(fromDate, toDate);
+    const startTimestamp = (fromDate)? momentFrom.valueOf() : null;
+    const endTimestamp = (toDate)? momentTo.valueOf() : null;
+
+    const traffic = await TrafficService.searchBetween(startTimestamp, endTimestamp);
     res.send(traffic);
   } catch (e) {
     res.status(400).send({ error: e.message });

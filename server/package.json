@@ -30,6 +30,8 @@
     "yargs": "^16.2.0"
   },
   "devDependencies": {
+    "@shelf/jest-mongodb": "^1.2.3",
+    "mongodb-memory-server-global-3.6": "^6.9.2",
     "supertest": "^6.0.1"
   }
 }

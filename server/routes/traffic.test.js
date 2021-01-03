@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 const mockSearchBetween = jest.fn();
 jest.mock('../services/Traffic', () => {
   return {
@@ -30,8 +32,11 @@ describe('Test the `/traffic` path', () => {
 
     await request(app).get(`/traffic?${params}`);
 
+    const startTimestamp = moment(fromDate).valueOf();
+    const endTimestamp = moment(toDate).valueOf();
+
     expect(mockSearchBetween).toHaveBeenCalledTimes(1);
-    expect(mockSearchBetween).toHaveBeenCalledWith(fromDate, toDate);
+    expect(mockSearchBetween).toHaveBeenCalledWith(startTimestamp, endTimestamp);
   });
 
   test('It should relay error messages from the service call when given valid dates', async () => {
