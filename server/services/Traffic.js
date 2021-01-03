@@ -66,7 +66,7 @@ const TrafficService = {
           'from': '$path.from',
           'to': '$path.to'
         },
-        'legs': {'$first': '$legs'},
+        'legs': {'$first': '$path.legs'},
         'weight': {'$sum': '$weight'},
         'score': {'$sum': '$score'},
       }

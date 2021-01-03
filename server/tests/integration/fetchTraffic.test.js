@@ -99,7 +99,7 @@ describe('Test fetching traffic from `/traffic`', () => {
 
     const result_1200_100200 = results[0].data[0];
     const expected_1200_100200 = {
-      path: { from: '100', to: '200' },
+      path: { from: '100', to: '200', legs: [[0, 0], [1, 1]] },
       score: -20,
       weight: 20,
       average: -1
@@ -108,7 +108,7 @@ describe('Test fetching traffic from `/traffic`', () => {
 
     const result_1200_101201 = results[0].data[1];
     const expected_1200_101201 = {
-      path: { from: '101', to: '201' },
+      path: { from: '101', to: '201', legs: [[1, 1], [2, 2]] },
       score: -30,
       weight: 15,
       average: -2
@@ -117,7 +117,7 @@ describe('Test fetching traffic from `/traffic`', () => {
 
     const result_1205_100200 = results[1].data[0];
     const expected_1205_100200 = {
-      path: { from: '100', to: '200' },
+      path: { from: '100', to: '200', legs: [[0, 0], [1, 1]] },
       score: 20,
       weight: 10,
       average: 2
@@ -126,7 +126,7 @@ describe('Test fetching traffic from `/traffic`', () => {
 
     const result_1205_101201 = results[1].data[1];
     const expected_1205_101201 = {
-      path: { from: '101', to: '201' },
+      path: { from: '101', to: '201', legs: [[1, 1], [2, 2]] },
       score: -45,
       weight: 15,
       average: -3
@@ -148,7 +148,7 @@ describe('Test fetching traffic from `/traffic`', () => {
 
     const result_1200_100200 = results[0].data[0];
     const expected_1200_100200 = {
-      path: { from: '100', to: '200' },
+      path: { from: '100', to: '200', legs: [[0, 0], [1, 1]] },
       score: -20,
       weight: 20,
       average: -1
@@ -157,7 +157,7 @@ describe('Test fetching traffic from `/traffic`', () => {
 
     const result_1200_101201 = results[0].data[1];
     const expected_1200_101201 = {
-      path: { from: '101', to: '201' },
+      path: { from: '101', to: '201', legs: [[1, 1], [2, 2]] },
       score: -30,
       weight: 15,
       average: -2
