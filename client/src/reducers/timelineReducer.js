@@ -24,15 +24,15 @@ const initialState = {
   }
 };
 
-const computeTimes = (from, to, interval) => {
+const computeTimes = (startDate, endDate, interval) => {
   interval = interval || {
     value: 5,
     unit: 'minutes'
   };
 
   const times = [];
-  let current = moment(from);
-  while (current.isSameOrBefore(to)) {
+  let current = moment(startDate);
+  while (current.isSameOrBefore(endDate)) {
     times.push(current.valueOf());
     current = current.add(interval.value, interval.unit);
   }
@@ -50,10 +50,10 @@ const timelineReducer = (state = initialState, action) => {
         loading: true
       };
     case UPDATE_TIMELINE:
-      const from = action.payload.from;
-      const adjustedFrom = moment(from).startOf('day').valueOf();
-      const adjustedTo = moment(from).endOf('day').valueOf();
-      const times = computeTimes(adjustedFrom, adjustedTo);
+      const dateString = action.payload.dateString;
+      const adjustedStartDate = moment(dateString).startOf('day').valueOf();
+      const adjustedEndDate = moment(dateString).endOf('day').valueOf();
+      const times = computeTimes(adjustedStartDate, adjustedEndDate);
 
       return {
         ...state,

@@ -104,14 +104,12 @@ const populatePaths = async () => {
 
 const validatePaths = async () => {
   bookmark(`(validatePaths)`);
-  const TrafficServiceInstance = new TrafficService();
-
   const paths = await Path.find().lean();
   inspect(`(validatePaths) paths.length: ${paths.length}`);
 
   for (const path of paths) {
     const {from, to} = path;
-    const isPathValid = await TrafficServiceInstance.checkPathAgainstPathRoute(from, to, '504');
+    const isPathValid = await TrafficService.checkPathAgainstPathRoute(from, to, '504');
 
     await Path.updateMany({
       from,

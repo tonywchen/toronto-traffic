@@ -3,7 +3,9 @@ const Trip = require('../../../models/nextbus/Trip');
 const Stop = require('../../../models/nextbus/Stop');
 const Vehicle = require('../../../models/nextbus/Vehicle');
 
-const nextbusService = NextbusService();
+const getCurrentTimestamp = () => {
+  return new Date().getTime();
+};
 
 const findRouteStops = async (routeTag) => {
   const stops = await Stop.find({
@@ -20,11 +22,11 @@ const fetchTrips = async (job) => {
     return;
   }
 
-  const currentTimestamp = nextbusService.getCurrentTimestamp();
+  const currentTimestamp = getCurrentTimestamp();
 
   const stops = await findRouteStops(routeTag);
 
-  const { groups } = await nextbusService.fetchPredictions(routeTag, '', stops, currentTimestamp);
+  const { groups } = await NextbusService.fetchPredictions(routeTag, '', stops, currentTimestamp);
   for (const groupKey of Object.keys(groups)) {
     const trip = groups[groupKey];
 
@@ -32,7 +34,7 @@ const fetchTrips = async (job) => {
     await tripObj.save();
   };
 
-  const vehicles = await nextbusService.fetchVehicles(routeTag);
+  const vehicles = await NextbusService.fetchVehicles(routeTag);
   for (const vehicle of vehicles) {
     const vehicleObj = new Vehicle({
       ...vehicle,

@@ -2,8 +2,6 @@ const NextbusService = require('../../../services/Nextbus');
 const Stop = require('../../../models/nextbus/Stop');
 const Subroute = require('../../../models/nextbus/Subroute');
 
-const nextbusService = NextbusService();
-
 const fetchRoute = async (job) => {
   const { routeTag } = job.attrs.data;
   if (!routeTag) {
@@ -11,7 +9,7 @@ const fetchRoute = async (job) => {
     return;
   }
 
-  const { stops, directions } = await nextbusService.fetchRoute(routeTag);
+  const { stops, directions } = await NextbusService.fetchRoute(routeTag);
 
   for (const stop of stops) {
     const filter = {

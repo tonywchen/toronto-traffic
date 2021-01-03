@@ -1,6 +1,5 @@
 const _ = require('lodash');
 
-const Path = require('../models/traffic/Path');
 const PathStatus = require('../models/traffic/PathStatus');
 const PathRoute = require('../models/traffic/PathRoute');
 
@@ -21,90 +20,92 @@ const roundToNearestMinute = (timestamp, rounding=ROUND_DOWN) => {
 const getDefaultTimeRange = async () => {
   const mostRecentPathStatus = await PathStatus.findOne().sort('-timestamp');
   if (!mostRecentPathStatus) {
-    return [];
+    return {};
   }
 
   const mostRecentTimestamp = mostRecentPathStatus.timestamp;
   const roundedTimestamp = roundToNearestMinute(mostRecentTimestamp, ROUND_UP);
 
-  from = roundedTimestamp - 60 * MINUTE_IN_MILLISECONDS;
-  to = roundedTimestamp;
+  const start = roundedTimestamp - 60 * MINUTE_IN_MILLISECONDS;
+  const end = roundedTimestamp;
 
-  return { from, to };
+  return { start, end };
 }
 
-const validateTimeRange = (from, to) => {
-  if (to - from > MAX_TIME_RANGE) {
+const validateTimeRange = (startTimestamp, endTimestamp) => {
+  if (endTimestamp < startTimestamp) {
+    throw new Error('Please ensure `startTimestamp` value is not larger than `endTimestamp` value');
+  }
+  if (endTimestamp - startTimestamp > MAX_TIME_RANGE) {
     throw new Error('Please specify a time range shorter than a day');
   }
 };
 
-class TrafficService {
-  constructor() {
-
-  }
-
-  async getPaths() {
-    const pathDocs = await Path.find({
-      version: Path.VERSION,
-      valid: true
-    });
-
-    const paths = pathDocs.map((pathDoc) => {
-      return {
-        from: pathDoc.from,
-        to: pathDoc.to,
-        legs: pathDoc.legs
-      };
-    });
-
-    return {
-      paths
-    };
-  }
-
-  async searchBetween(from, to) {
-    if (!from || !to) {
+const TrafficService = {
+  searchBetween: async (startTimestamp, endTimestamp) => {
+    if (!startTimestamp || !endTimestamp) {
       const defaultTimeRange = await getDefaultTimeRange();
-      from = defaultTimeRange.from;
-      to = defaultTimeRange.to;
+      startTimestamp = defaultTimeRange.start;
+      endTimestamp = defaultTimeRange.end;
     }
 
-    validateTimeRange(from, to);
+    validateTimeRange(startTimestamp, endTimestamp);
 
     const pathStatusPipeline = [{
       '$match': {
         timestamp: {
-          '$gte': from,
-          '$lt': to
+          '$gte': startTimestamp,
+          '$lt': endTimestamp
         },
         'path.valid': true
       },
     }, {
       '$group': {
         '_id': {
-          // 'timestamp': '$timestamp',
-          'interval': '$interval'
+          'interval': '$interval',
+          'from': '$path.from',
+          'to': '$path.to'
+        },
+        'legs': {'$first': '$path.legs'},
+        'weight': {'$sum': '$weight'},
+        'score': {'$sum': '$score'},
+      }
+    }, {
+      '$sort': { // this sort mostly helps with more predictable testing data
+        '_id.from': 1,
+        '_id.to': 1
+      }
+    }, {
+      '$project': {
+        '_id': '$_id',
+        'legs': '$legs',
+        'weight': '$weight',
+        'score': '$score',
+        'average': {
+          '$divide': ['$score', '$weight']
+        },
+      }
+    }, {
+      '$group': {
+        '_id': {
+          'interval': '$_id.interval',
         },
         'data': {
           '$push': {
             'path': {
-              'from': '$path.from',
-              'to': '$path.to',
-              'legs': '$path.legs'
+              'from': '$_id.from',
+              'to': '$_id.to',
+              'legs': '$legs',
             },
             'weight': '$weight',
             'score': '$score',
-            'average': {
-              '$divide': ['$score', '$weight']
-            }
+            'average': '$average'
           }
         }
       }
     }, {
       '$project': {
         '_id': 0,
-        // 'timestamp': '$_id.timestamp',
         'timestamp': '$_id.interval',
         'interval': '$_id.interval',
         'data': '$data'
@@ -116,31 +117,31 @@ class TrafficService {
     }];
 
     const recentPathStatuses = await PathStatus.aggregate(pathStatusPipeline);
-    const firstPathStatus = await this.getFirstPathStatus();
-    const lastPathStatus = await this.getLastPathStatus();
+    const firstPathStatus = await TrafficService.getFirstPathStatus();
+    const lastPathStatus = await TrafficService.getLastPathStatus();
 
     return {
-      from: from,
-      to: to,
+      startTimestamp,
+      endTimestamp,
       results: recentPathStatuses,
       first: firstPathStatus.timestamp || 0,
       last: lastPathStatus.timestamp || 0
     };
-  }
+  },
 
-  async getFirstPathStatus() {
+  getFirstPathStatus: async () => {
     const firstPathStatus = await PathStatus.findOne({}).sort({timestamp: 1});
 
     return firstPathStatus;
-  }
+  },
 
-  async getLastPathStatus() {
+  getLastPathStatus: async () => {
     const lastPathStatus = await PathStatus.findOne({}).sort({timestamp: -1});
 
     return lastPathStatus;
-  }
+  },
 
-  async checkPathAgainstPathRoute(from, to, routeTag) {
+  checkPathAgainstPathRoute: async (from, to, routeTag) => {
     const exists = await PathRoute.exists({routeTag});
     if (!exists) {
       return true;
@@ -176,6 +177,6 @@ class TrafficService {
 
     return false;
   }
-}
+};
 
 module.exports = TrafficService;

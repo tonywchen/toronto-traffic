@@ -11,11 +11,11 @@ const connect = () => {
 
 const traffic = {
   fetchTraffic: (from) => {
-    const adjustedFrom = moment(from).startOf('day').valueOf();
-    const adjustedTo = moment(from).endOf('day').valueOf();
+    const adjustedStartDate = moment(from).startOf('day').format();
+    const adjustedEndDate = moment(from).endOf('day').format();
     const params = {
-      from: adjustedFrom,
-      to: adjustedTo
+      startDate: adjustedStartDate,
+      endDate: adjustedEndDate
     };
 
     return connect().get(`${SERVER_URL}/traffic`, {
