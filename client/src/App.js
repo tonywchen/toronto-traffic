@@ -12,8 +12,8 @@ import { fetchTraffic, fetchPaths } from './actions/traffic';
 const App = () => {
   const dispatch = useDispatch();
 
-  const dispatchFetchTraffic = (newTime) => {
-    return dispatch(fetchTraffic(newTime));
+  const dispatchFetchTraffic = (dateString) => {
+    return dispatch(fetchTraffic(dateString));
   };
 
   const dispatchFetchPaths = () => {

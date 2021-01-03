@@ -49,11 +49,11 @@ const trafficTransformer = (source) => {
   }
 };
 
-const dispatchToTimeline = (dispatch, getState, from, trafficResponse) => {
+const dispatchToTimeline = (dispatch, getState, dateString, trafficResponse) => {
   dispatch({
     type: UPDATE_TIMELINE,
     payload: {
-      from
+      dateString
     }
   });
 
@@ -79,19 +79,19 @@ const dispatchToTimeline = (dispatch, getState, from, trafficResponse) => {
   });
 };
 
-export const fetchTraffic = (from) => {
+export const fetchTraffic = (dateString) => {
   return async (dispatch, getState) => {
     dispatch({
       type: REFRESH_TIMELINE
     });
 
-    const response = await resource.fetchTraffic(from);
+    const response = await resource.fetchTraffic(dateString);
     dispatch({
       type: FETCH_TRAFFIC,
       payload: response.data
     });
 
-    dispatchToTimeline(dispatch, getState, from, response);
+    dispatchToTimeline(dispatch, getState, dateString, response);
   }
 };
 

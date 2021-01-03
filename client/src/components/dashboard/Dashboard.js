@@ -101,20 +101,20 @@ const Dashboard = ({ onDayChanged }) => {
   const handleDayChange = (amount) => {
     stopAnimateTimeline();
     if (amount) {
-      const newTime = moment(timestamps[0]).add(amount, 'days').valueOf();
+      const startDate = moment(timestamps[0]).add(amount, 'days').format();
 
       if (onDayChanged) {
-        onDayChanged(newTime);
+        onDayChanged(startDate);
       }
     }
   };
   const handleDaySelect = (date) => {
     stopAnimateTimeline();
     if (date) {
-      const newTime = moment(date).valueOf();
+      const startDate = moment(date).format();
 
       if (onDayChanged) {
-        onDayChanged(newTime);
+        onDayChanged(startDate);
       }
     }
   };
