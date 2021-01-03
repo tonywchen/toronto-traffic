@@ -70,25 +70,25 @@ describe('Test fetching traffic from `/traffic`', () => {
   });
 
   it('should return correct datetime range when there are traffic data between a given datetime range', async () => {
-    const fromDate = '2020-12-01T12:00:00.000-05:00';
-    const toDate = '2020-12-01T13:00:00.000-05:00';
+    const startDate = '2020-12-01T12:00:00.000-05:00';
+    const endDate = '2020-12-01T13:00:00.000-05:00';
 
-    const { statusCode, body } = await request(app).get(`/traffic?fromDate=${fromDate}&toDate=${toDate}`);
+    const { statusCode, body } = await request(app).get(`/traffic?startDate=${startDate}&endDate=${endDate}`);
     const { startTimestamp, endTimestamp } = body;
 
     expect(statusCode).toEqual(200);
 
-    const expectedStartTimestamp = new Date(fromDate).valueOf();
-    const expectedEndTimestamp = new Date(toDate).valueOf();
+    const expectedStartTimestamp = new Date(startDate).valueOf();
+    const expectedEndTimestamp = new Date(endDate).valueOf();
 
     expect(startTimestamp).toEqual(expectedStartTimestamp);
     expect(endTimestamp).toEqual(expectedEndTimestamp);
   });
   it('should fetch matching traffic when there are traffic data between a given datetime range', async () => {
-    const fromDate = '2020-12-01T12:00:00.000-05:00';
-    const toDate = '2020-12-01T13:00:00.000-05:00';
+    const startDate = '2020-12-01T12:00:00.000-05:00';
+    const endDate = '2020-12-01T13:00:00.000-05:00';
 
-    const { statusCode, body } = await request(app).get(`/traffic?fromDate=${fromDate}&toDate=${toDate}`);
+    const { statusCode, body } = await request(app).get(`/traffic?startDate=${startDate}&endDate=${endDate}`);
     const { results } = body;
 
     expect(statusCode).toEqual(200);
@@ -135,10 +135,10 @@ describe('Test fetching traffic from `/traffic`', () => {
   });
 
   it('should fetch matching traffic when there are traffic data between a shorter given datetime range', async () => {
-    const fromDate = '2020-12-01T12:00:00.000-05:00';
-    const toDate = '2020-12-01T12:05:00.000-05:00';
+    const startDate = '2020-12-01T12:00:00.000-05:00';
+    const endDate = '2020-12-01T12:05:00.000-05:00';
 
-    const { statusCode, body } = await request(app).get(`/traffic?fromDate=${fromDate}&toDate=${toDate}`);
+    const { statusCode, body } = await request(app).get(`/traffic?startDate=${startDate}&endDate=${endDate}`);
     const { results } = body;
 
     expect(statusCode).toEqual(200);
@@ -166,25 +166,25 @@ describe('Test fetching traffic from `/traffic`', () => {
   });
 
   it('should return correct datetime range when there are no traffic data between a given datetime range', async () => {
-    const fromDate = '2020-12-02T12:00:00.000-05:00';
-    const toDate = '2020-12-02T13:00:00.000-05:00';
+    const startDate = '2020-12-02T12:00:00.000-05:00';
+    const endDate = '2020-12-02T13:00:00.000-05:00';
 
-    const { statusCode, body } = await request(app).get(`/traffic?fromDate=${fromDate}&toDate=${toDate}`);
+    const { statusCode, body } = await request(app).get(`/traffic?startDate=${startDate}&endDate=${endDate}`);
     const { startTimestamp, endTimestamp } = body;
 
     expect(statusCode).toEqual(200);
 
-    const expectedStartTimestamp = new Date(fromDate).valueOf();
-    const expectedEndTimestamp = new Date(toDate).valueOf();
+    const expectedStartTimestamp = new Date(startDate).valueOf();
+    const expectedEndTimestamp = new Date(endDate).valueOf();
 
     expect(startTimestamp).toEqual(expectedStartTimestamp);
     expect(endTimestamp).toEqual(expectedEndTimestamp);
   });
   it('should fetch empty traffic when there are no traffic data between the given datetime range', async () => {
-    const fromDate = '2020-12-02T12:00:00.000-05:00';
-    const toDate = '2020-12-02T13:00:00.000-05:00';
+    const startDate = '2020-12-02T12:00:00.000-05:00';
+    const endDate = '2020-12-02T13:00:00.000-05:00';
 
-    const { statusCode, body } = await request(app).get(`/traffic?fromDate=${fromDate}&toDate=${toDate}`);
+    const { statusCode, body } = await request(app).get(`/traffic?startDate=${startDate}&endDate=${endDate}`);
     const { results } = body;
 
     expect(statusCode).toEqual(200);

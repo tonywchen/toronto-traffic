@@ -26,14 +26,14 @@ describe('Test the `/traffic` path', () => {
   });
 
   test('It should make appropriate service call when given valid dates', async () => {
-    const fromDate = '2020-12-15';
-    const toDate = '2020-12-16';
-    const params = `fromDate=${fromDate}&toDate=${toDate}`;
+    const startDate = '2020-12-15';
+    const endDate = '2020-12-16';
+    const params = `startDate=${startDate}&endDate=${endDate}`;
 
     await request(app).get(`/traffic?${params}`);
 
-    const startTimestamp = moment(fromDate).valueOf();
-    const endTimestamp = moment(toDate).valueOf();
+    const startTimestamp = moment(startDate).valueOf();
+    const endTimestamp = moment(endDate).valueOf();
 
     expect(mockSearchBetween).toHaveBeenCalledTimes(1);
     expect(mockSearchBetween).toHaveBeenCalledWith(startTimestamp, endTimestamp);
@@ -43,9 +43,9 @@ describe('Test the `/traffic` path', () => {
     mockSearchBetween.mockReset();
     mockSearchBetween.mockRejectedValue(new Error('Internal Error'));
 
-    const fromDate = '2020-12-15';
-    const toDate = '2020-12-16';
-    const params = `fromDate=${fromDate}&toDate=${toDate}`;
+    const startDate = '2020-12-15';
+    const endDate = '2020-12-16';
+    const params = `startDate=${startDate}&endDate=${endDate}`;
 
     const response = await request(app).get(`/traffic?${params}`);
 
@@ -56,9 +56,9 @@ describe('Test the `/traffic` path', () => {
   });
 
   test('It should throw an error when given invalid dates', async () => {
-    const fromDate = '2020-13-15';
-    const toDate = '2020-13-16';
-    const params = `fromDate=${fromDate}&toDate=${toDate}`;
+    const startDate = '2020-13-15';
+    const endDate = '2020-13-16';
+    const params = `startDate=${startDate}&endDate=${endDate}`;
 
     const response = await request(app).get(`/traffic?${params}`);
 
@@ -70,16 +70,16 @@ describe('Test the `/traffic` path', () => {
   });
 
   test('It should throw an error when given an invalid date range', async () => {
-    const fromDate = '2020-12-17';
-    const toDate = '2020-12-16';
-    const params = `fromDate=${fromDate}&toDate=${toDate}`;
+    const startDate = '2020-12-17';
+    const endDate = '2020-12-16';
+    const params = `startDate=${startDate}&endDate=${endDate}`;
 
     const response = await request(app).get(`/traffic?${params}`);
 
     expect(mockSearchBetween).toHaveBeenCalledTimes(0);
     expect(response.statusCode).toEqual(400);
     expect(response.body).toEqual({
-      error: '"fromDate" must not be larger than "toDate"'
+      error: '"startDate" must not be larger than "endDate"'
     });
   });
 });

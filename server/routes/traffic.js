@@ -4,21 +4,21 @@ const moment = require('moment-timezone');
 const TrafficService = require('../services/Traffic');
 
 router.get('/traffic', async (req, res) => {
-  let { fromDate, toDate } = req.query;
+  let { startDate, endDate } = req.query;
 
   try {
-    const momentFrom = moment(fromDate);
-    const momentTo = moment(toDate);
+    const startMoment = moment(startDate);
+    const endMoment = moment(endDate);
 
-    if (!momentFrom.isValid() || !momentTo.isValid()) {
+    if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error('Invalid dates are given');
     }
-    if (momentFrom.isAfter(momentTo)) {
-      throw new Error('"fromDate" must not be larger than "toDate"');
+    if (startMoment.isAfter(endMoment)) {
+      throw new Error('"startDate" must not be larger than "endDate"');
     }
 
-    const startTimestamp = (fromDate)? momentFrom.valueOf() : null;
-    const endTimestamp = (toDate)? momentTo.valueOf() : null;
+    const startTimestamp = (startDate)? startMoment.valueOf() : null;
+    const endTimestamp = (endDate)? endMoment.valueOf() : null;
 
     const traffic = await TrafficService.searchBetween(startTimestamp, endTimestamp);
     res.send(traffic);
