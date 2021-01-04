@@ -11,12 +11,17 @@ const fetchRoute = async (job) => {
 
   const { stops, directions } = await NextbusService.fetchRoute(routeTag);
 
+  await Stop.updateMany({ routeTag }, { $set: { enabled: false } });
+
   for (const stop of stops) {
     const filter = {
       tag: stop.tag
     };
 
-    await Stop.findOneAndUpdate(filter, stop, {
+    await Stop.findOneAndUpdate(filter, {
+      ...stop,
+      enabled: true
+    }, {
       new: true,
       upsert: true
     });

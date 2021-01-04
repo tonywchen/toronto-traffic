@@ -9,7 +9,8 @@ const getCurrentTimestamp = () => {
 
 const findRouteStops = async (routeTag) => {
   const stops = await Stop.find({
-    routeTag
+    routeTag,
+    enabled: true
   });
 
   return stops;

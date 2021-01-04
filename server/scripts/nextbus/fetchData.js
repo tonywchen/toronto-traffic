@@ -12,7 +12,7 @@ const fetchTrips = require('./parts/fetchTrips');
 const jobs = [{
   name: fetchRoute.name,
   fetch: fetchRoute.fetch,
-  interval: '1 day',
+  interval: '15 minutes',
   active: true,
   params: {
     routeTag: 504
@@ -54,9 +54,17 @@ const run = async () => {
       await agenda.every(interval, name, params);
     }
   }
+};
+
+const graceful = async () => {
+  await agenda.stop();
+  process.exit(0);
 }
 
 (async () => {
+  process.on('SIGTERM', graceful);
+  process.on('SIGINT' , graceful);
+
   await initialize();
   await run();
 })();
