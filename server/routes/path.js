@@ -11,4 +11,16 @@ router.get('/paths', async (req, res) => {
   }
 });
 
+router.get('/paths/:from/to/:to', async (req, res) => {
+  const { from, to } = req.params;
+  const { date } = req.query;
+
+  try {
+    const pathDetail = await PathService.getPathDetail(from, to, date);
+    res.send(pathDetail);
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
 module.exports = router;

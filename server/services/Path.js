@@ -1,6 +1,11 @@
 const _ = require('lodash');
+const moment = require('moment-timezone');
 
 const Path = require('../models/traffic/Path');
+const PathStatus = require('../models/traffic/PathStatus');
+const Stop = require('../models/nextbus/Stop');
+
+const DEFAULT_TIMEZONE = 'America/Toronto';
 
 const PathService = {
   getPaths: async () => {
@@ -22,15 +27,15 @@ const PathService = {
     };
   },
   getPathDetail: async (from, to, date) => {
-    const { fromStop, toStop } = await this.getPathStops(from, to);
-    const dailyPathStatuses = await this.getPathStatusesOfDate(from, to, date);
-    const trend = await this.getPathStatusTrend(from, to, date);
+    const { fromStop, toStop } = await PathService.getPathStops(from, to);
+    const { pathStatuses } = await PathService.getPathStatusesOfDate(from, to, date);
+    const trend = await PathService.getPathStatusTrend(from, to, date);
 
     return {
       fromStop,
       toStop,
-      daily: dailyPathStatuses,
-      trend: trend
+      daily: pathStatuses,
+      trend
     };
   },
   getPathStops: async (from, to) => {
@@ -61,7 +66,7 @@ const PathService = {
 
     return result;
   },
-  getPathStatusesOfDate: async (from, to, date) => {
+  getPathStatusesOfDate: async (from, to, date, timezone = DEFAULT_TIMEZONE) => {
     const startTimestamp = moment.tz(date, timezone).startOf('day').valueOf();
     const endTimestamp = moment.tz(date, timezone).startOf('day').add(1, 'days').valueOf();
 
@@ -105,11 +110,17 @@ const PathService = {
 
     const pathStatuses = await PathStatus.aggregate(pathStatusPipeline);
 
-    return pathStatuses;
+    return {
+      pathStatuses,
+      timestampRange: {
+        start: startTimestamp,
+        end: endTimestamp
+      }
+    };
   },
-  getPathStatusTrend: async (from, to, date, unit = 'months') => {
+  getPathStatusTrend: async (from, to, date, unit = 'months', timezone = DEFAULT_TIMEZONE) => {
     const startTimestamp = moment.tz(date, timezone).startOf('day').subtract(1, unit).valueOf();
-    const endTimestamp = moment.tz(date, timezone).startOf('day').add(1, 'days').valueOf();
+    const endTimestamp = moment.tz(date, timezone).startOf('day').valueOf();
 
     const pathStatusPipeline = [{
       '$match': {
@@ -146,7 +157,7 @@ const PathService = {
     return {
       average: pathStatusTrend.average,
       unit: unit,
-      dateTimeRange: {
+      timestampRange: {
         start: startTimestamp,
         end: endTimestamp
       }
