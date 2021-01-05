@@ -152,7 +152,10 @@ const PathService = {
         }
       }
     }];
-    const [pathStatusTrend] = await PathStatus.aggregate(pathStatusPipeline);
+    const results = await PathStatus.aggregate(pathStatusPipeline);
+    const pathStatusTrend = results[0] || {
+      average: null
+    };
 
     return {
       average: pathStatusTrend.average,
