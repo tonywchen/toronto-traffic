@@ -1,7 +1,8 @@
 import {
   FETCH_PATHS,
   FETCH_PATH_DETAIL_INITIALIZED,
-  FETCH_PATH_DETAIL
+  FETCH_PATH_DETAIL,
+  RESET_PATH_DETAIL
 } from '../actions/types';
 
 const initialState = {
@@ -17,15 +18,25 @@ const pathReducer = (state = initialState, action) => {
         paths: action.payload.paths || []
       };
     case FETCH_PATH_DETAIL_INITIALIZED:
+      const { from, to } = action.payload;
+
       return {
         ...state,
-        selectedPath: null
+        selectedPath: {
+          from: { tag: from },
+          to: { tag: to }
+        }
       };
     case FETCH_PATH_DETAIL:
       return {
         ...state,
         selectedPath: action.payload.pathDetail
       };
+    case RESET_PATH_DETAIL:
+      return {
+        ...state,
+        selectedPath: null
+      }
     default:
       return state;
   }

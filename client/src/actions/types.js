@@ -5,6 +5,7 @@ export const SELECT_NEXT_TRAFFIC = 'select_next_traffic';
 export const FETCH_PATHS = 'fetch_paths';
 export const FETCH_PATH_DETAIL_INITIALIZED = 'fetch_path_detail_initialized';
 export const FETCH_PATH_DETAIL = 'fetch_path_detail';
+export const RESET_PATH_DETAIL = 'reset_path_detail';
 
 export const REFRESH_TIMELINE = 'refresh_timeline';
 export const UPDATE_TIMELINE = 'update_timeline';

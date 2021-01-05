@@ -2,13 +2,10 @@ import _ from 'lodash';
 
 import {
   FETCH_TRAFFIC,
-  FETCH_PATHS,
   UPDATE_TIMELINE,
   REFRESH_TIMELINE,
   SET_TIMELINE_PREVIEW,
   SET_TIMELINE_DATA_STATUS,
-  FETCH_PATH_DETAIL_INITIALIZED,
-  FETCH_PATH_DETAIL
 } from './types';
 import resource from '../resources/traffic';
 import { TrafficToColour } from '../components/common/Util'

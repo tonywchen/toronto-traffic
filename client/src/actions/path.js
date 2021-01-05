@@ -1,7 +1,8 @@
 import {
   FETCH_PATHS,
   FETCH_PATH_DETAIL_INITIALIZED,
-  FETCH_PATH_DETAIL
+  FETCH_PATH_DETAIL,
+  RESET_PATH_DETAIL
 } from './types';
 import resource from '../resources/traffic';
 
@@ -34,3 +35,11 @@ export const fetchPathDetail = (from, to, timestamp) => {
     });
   };
 };
+
+export const resetPathDetail = () => {
+  return (dispatch) => {
+    dispatch({
+      type: RESET_PATH_DETAIL
+    });
+  };
+}
