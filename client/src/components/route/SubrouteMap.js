@@ -5,7 +5,7 @@ import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
 
 const SubrouteMap = () => {
-  const paths = useSelector(store => store.traffic.paths);
+  const paths = useSelector(store => store.path.paths);
 
   const onPathClicked = (e) => {
     // console.log(e.features[0]);

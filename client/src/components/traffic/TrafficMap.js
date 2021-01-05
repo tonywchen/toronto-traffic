@@ -5,7 +5,7 @@ import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
 import { TRAFFIC_COLOUR_STEPS } from '../common/Util';
 
-import { fetchPathDetail } from '../../actions/traffic';
+import { fetchPathDetail } from '../../actions/path';
 
 const LINE_COLOUR_STEPPED = [
   'step', ['get', 'average'],

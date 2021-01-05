@@ -7,7 +7,8 @@ import SubrouteMap from './components/route/SubrouteMap';
 import Dashboard from './components/dashboard/Dashboard';
 import Info from './components/info/Info';
 
-import { fetchTraffic, fetchPaths } from './actions/traffic';
+import { fetchTraffic } from './actions/traffic';
+import { fetchPaths } from './actions/path';
 
 const App = () => {
   const dispatch = useDispatch();
