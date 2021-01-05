@@ -6,6 +6,7 @@ import TrafficMap from './components/traffic/TrafficMap';
 import SubrouteMap from './components/route/SubrouteMap';
 import Dashboard from './components/dashboard/Dashboard';
 import Info from './components/info/Info';
+import PathDetail from './components/path/PathDetail';
 
 import { fetchTraffic } from './actions/traffic';
 import { fetchPaths } from './actions/path';
@@ -38,6 +39,7 @@ const App = () => {
       <Dashboard
         onDayChanged={dispatchFetchTraffic}
       />
+      <PathDetail />
     </div>
   );
 };

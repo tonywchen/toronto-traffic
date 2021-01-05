@@ -15,7 +15,11 @@ const getTrafficStatusText = (average) => {
     return 'as fast as';
   }
 
-  const numberText = Math.abs(average).toFixed(0);
+  const absAverage = Math.abs(average);
+  const numberText = (absAverage > 100)
+    ? absAverage.toFixed(0)
+    : absAverage.toPrecision(2);
+
   const descriptor = (average > 0)? 'slower than' : 'faster than';
 
   return `${numberText} seconds ${descriptor}`;
@@ -23,6 +27,7 @@ const getTrafficStatusText = (average) => {
 
 const PathDetail = () => {
   const selectedPath = useSelector(store => store.path.selectedPath);
+  const timestamps = useSelector(store => store.timeline.timestamps);
 
   const dispatch = useDispatch();
 
@@ -117,7 +122,16 @@ const PathDetail = () => {
       ? (total.score / total.weight)
       : null;
 
-    const dailyPreview = trafficToPreview(selectedPath.daily);
+    const previewSource = {};
+    selectedPath.daily.forEach(datum => {
+      previewSource[datum.timestamp] = {
+        data: [datum]
+      };
+    });
+
+    const dailyPreview = {
+      data: trafficToPreview(previewSource)(timestamps)
+    };
 
     return (
       <div className={`path-detail__daily space-y-1 px-4 py-4 border-b border-white border-opacity-10`}>
@@ -132,13 +146,18 @@ const PathDetail = () => {
         )}
 
         { (dailyAverage !== null) && (
-          <div className="text-sm text-white">
-            <span>The traffic is on average</span>&nbsp;
-            <span className="font-bold">
-              { getTrafficStatusText(dailyAverage) }
-            </span>&nbsp;
-            <span>predicted on this day</span>
-          </div>
+          <>
+            <div className="text-sm text-white">
+              <span>The traffic is on average</span>&nbsp;
+              <span className="font-bold">
+                { getTrafficStatusText(dailyAverage) }
+              </span>&nbsp;
+              <span>predicted on this day</span>
+            </div>
+            <div className={`h-8 relative w-full py-2 border-b border-white border-opacity-25`}>
+              <Preview preview={dailyPreview} />
+            </div>
+          </>
         )}
       </div>
     );
