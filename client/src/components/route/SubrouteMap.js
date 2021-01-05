@@ -8,7 +8,7 @@ const SubrouteMap = () => {
   const paths = useSelector(store => store.traffic.paths);
 
   const onPathClicked = (e) => {
-    console.log(e.features[0]);
+    // console.log(e.features[0]);
   };
 
   const layerData = {

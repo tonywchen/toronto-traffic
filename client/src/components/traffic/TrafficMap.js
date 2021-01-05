@@ -1,9 +1,11 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
 import { TRAFFIC_COLOUR_STEPS } from '../common/Util';
+
+import { fetchPathDetail } from '../../actions/traffic';
 
 const LINE_COLOUR_STEPPED = [
   'step', ['get', 'average'],
@@ -54,6 +56,8 @@ const getNumberIdFromPath = (from, to) => {
 const TrafficMap = () => {
   const trafficByTimestamp = useSelector(store => store.traffic.trafficByTimestamp);
   const selectedTime = useSelector(store => store.timeline.selected);
+
+  const dispatch = useDispatch();
 
   const computeTrafficSnapshots = () => {
     const traffic = trafficByTimestamp[selectedTime];
@@ -139,6 +143,7 @@ const TrafficMap = () => {
           id={hitboxLayerId}
           source={sourceId}
           key={hitboxLayerId}
+          onClick={onPathClicked}
           onMousemove={onPathMousemove}
           onMouseleave={onPathMouseleave}
         />
@@ -147,7 +152,8 @@ const TrafficMap = () => {
   };
 
   const onPathClicked = (e) => {
-    console.log(e.features[0].properties);
+    const { from, to } = e.features[0].properties;
+    dispatch(fetchPathDetail(from, to));
   };
 
   const onPathMousemove = (e, data) => {
