@@ -152,8 +152,8 @@ const TrafficMap = () => {
   };
 
   const onPathClicked = (e) => {
-    const { from, to } = e.features[0].properties;
-    dispatch(fetchPathDetail(from, to));
+    const { from, to, average } = e.features[0].properties;
+    dispatch(fetchPathDetail(from, to, average, selectedTime));
   };
 
   const onPathMousemove = (e, data) => {

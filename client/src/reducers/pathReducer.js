@@ -23,6 +23,7 @@ const pathReducer = (state = initialState, action) => {
       return {
         ...state,
         selectedPath: {
+          isLoading: true,
           from: { tag: from },
           to: { tag: to }
         }
@@ -30,7 +31,7 @@ const pathReducer = (state = initialState, action) => {
     case FETCH_PATH_DETAIL:
       return {
         ...state,
-        selectedPath: action.payload.pathDetail
+        selectedPath: action.payload
       };
     case RESET_PATH_DETAIL:
       return {

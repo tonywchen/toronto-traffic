@@ -1,3 +1,5 @@
+import moment from 'moment-timezone';
+
 import {
   FETCH_PATHS,
   FETCH_PATH_DETAIL_INITIALIZED,
@@ -17,21 +19,29 @@ export const fetchPaths = () => {
   }
 };
 
-export const fetchPathDetail = (from, to, timestamp) => {
+export const fetchPathDetail = (from, to, average, selectedTime) => {
   return async (dispatch) => {
     dispatch({
       type: FETCH_PATH_DETAIL_INITIALIZED,
       payload: {
         from,
-        to,
-        timestamp
+        to
       }
     });
 
-    const response = await resource.fetchPathDetail(from, to, timestamp);
+    const date = moment(selectedTime).format();
+
+    const response = await resource.fetchPathDetail(from, to, date);
+
     dispatch({
       type: FETCH_PATH_DETAIL,
-      payload: response.data
+      payload: {
+        ...response.data,
+        currentView: {
+          average,
+          selectedTime
+        }
+      }
     });
   };
 };

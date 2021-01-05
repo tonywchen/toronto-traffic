@@ -25,8 +25,8 @@ const traffic = {
   fetchPaths: () => {
     return connect().get(`${SERVER_URL}/paths`);
   },
-  fetchPathDetail: (from, to, timestamp) => {
-    return connect().get(`${SERVER_URL}/paths/${from}/to/${to}?timestamp=${timestamp}`);
+  fetchPathDetail: (from, to, date) => {
+    return connect().get(`${SERVER_URL}/paths/${from}/to/${to}?date=${date}`);
   },
 };
 
