@@ -62,6 +62,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
   const timestamps = useSelector(store => store.timeline.timestamps);
   const dataStatus = useSelector(store => store.timeline.dataStatus);
   const isTimelineLoading = useSelector(store => store.timeline.loading);
+  const preview = useSelector(store => store.timeline.preview);
 
   const [lookupTime, setLookupTime] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -215,7 +216,7 @@ const Timeline = ({handleDayChange, forward, rewind, toggle, speed, changeSpeed,
         className={`timeline relative ${opacityClass}`}
         ref={timelineRef}>
         <div className={`timeline__track relative h-16 w-full`} {...bind()}>
-          <Preview />
+          <Preview preview={preview} />
           <Ruler domain={domain} dragging={dragging}/>
           <Playhead domain={domain} lookupTime={lookupTime} dragging={dragging} />
         </div>
