@@ -25,7 +25,6 @@ const Preview = ({ preview = {}, showTime = 0 }) => {
       <div className={`relative h-2 w-full border-t border-white border-opacity-10`}>
         {
           ticks.map((tick, index) => {
-            console.log(tick, data[tick]);
             const timestamp = data[tick].data.timestamp
 
             let left = `${index / numOfDivisions * 100}%`;

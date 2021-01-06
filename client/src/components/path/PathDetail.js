@@ -1,5 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+
+import _ from 'lodash';
 import moment from 'moment-timezone';
 
 import { DATE_FORMAT, TIME_FORMAT, trafficToColour, trafficToPreview } from '../common/Util';
@@ -28,6 +30,8 @@ const getTrafficStatusText = (average) => {
 const PathDetail = () => {
   const selectedPath = useSelector(store => store.path.selectedPath);
   const timestamps = useSelector(store => store.timeline.timestamps);
+
+  const selectedTime = useSelector(store => store.timeline.selected);
 
   const dispatch = useDispatch();
 
@@ -120,21 +124,28 @@ const PathDetail = () => {
       data: trafficToPreview(previewSource)(timestamps)
     };
 
+    const currentView = _.find(selectedPath.daily, {timestamp: selectedTime}) || {};
+
     return (
       <div className={`path-detail__daily space-y-2 px-4 py-4 border-b border-white border-opacity-10`}>
-        { selectedPath.currentView && !isNaN(selectedPath.currentView.average) && (
-          <>
-            <div className="text-xs text-white  text-opacity-50">
-              { moment(selectedPath.currentView.selectedTime).format(DATE_FORMAT) }
-            </div>
-            <div className="text-sm text-white">
-              <span>Between these two stops, the traffic is</span>&nbsp;
-              <span className="font-bold" style={{color: trafficToColour(selectedPath.currentView.average)}}>
-                { getTrafficStatusText(selectedPath.currentView.average) }
-              </span>&nbsp;
-              <span>predicted at { moment(selectedPath.currentView.selectedTime).format(TIME_FORMAT) }.</span>
-            </div>
-          </>
+        <div className="text-xs text-white  text-opacity-50">
+          { moment(selectedTime).format(DATE_FORMAT) }
+        </div>
+
+        { !currentView.weight && (
+          <div className="text-sm text-white">
+            <span>No traffic information was available between these two stops at { moment(selectedTime).format(TIME_FORMAT) }.</span>
+          </div>
+        )}
+
+        { currentView.weight && (
+          <div className="text-sm text-white">
+            <span>Between these two stops, the traffic is</span>&nbsp;
+            <span className="font-bold" style={{color: trafficToColour(currentView.score / currentView.weight)}}>
+              { getTrafficStatusText(currentView.score / currentView.weight) }
+            </span>&nbsp;
+            <span>predicted at { moment(selectedTime).format(TIME_FORMAT) }.</span>
+          </div>
         )}
 
         { (dailyAverage === null) && (

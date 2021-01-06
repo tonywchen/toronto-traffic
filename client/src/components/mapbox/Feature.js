@@ -34,7 +34,9 @@ const Feature = ({children, data, id, featureId, type}) => {
   const createFeature = (data, id, featureId, type) => {
     switch (type) {
       case 'LineString':
-        return createLine(data, id, featureId)
+        return createLine(data, id, featureId);
+      case 'Point':
+        return createPoint(data, id, featureId);
       case 'FeatureCollection':
         return createCollection();
       default:
@@ -51,6 +53,20 @@ const Feature = ({children, data, id, featureId, type}) => {
       geometry: {
         type: 'LineString',
         coordinates: data.legs || []
+      },
+      id: featureId
+    };
+  };
+
+  const createPoint = (data, id, featureId) => {
+    return {
+      type: 'Feature',
+      properties: {
+        ...data.attributes
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: data.coordinates || []
       },
       id: featureId
     };
