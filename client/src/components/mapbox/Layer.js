@@ -21,21 +21,44 @@ const getTypeData = (type, data) => {
           'line-offset': 0
         }
       }
+
+      if (typeData && data) {
+        typeData.paint['line-color'] = data.lineColor || typeData.paint['line-color'];
+        typeData.paint['line-offset'] = data.lineOffset || typeData.paint['line-offset'];
+        typeData.paint['line-width'] = data.lineWidth || typeData.paint['line-width'];
+      }
+
+      break;
+    case 'circle':
+      typeData = {
+        type: 'circle',
+        layout: {
+
+        },
+        paint: {
+          'circle-color': 'white',
+          'circle-radius': 2,
+          'circle-stroke-color': 'white',
+          'circle-stroke-width': 1
+        }
+      }
+
+      if (typeData && data) {
+        typeData.paint['circle-color'] = data.circleColor || typeData.paint['circle-color'];
+        typeData.paint['circle-radius'] = data.circleRadius || typeData.paint['circle-radius'];
+        typeData.paint['circle-stroke-color'] = data.circleStrokeColor || typeData.paint['circle-stroke-color'];
+        typeData.paint['circle-stroke-width'] = data.circleStrokeWidth || typeData.paint['circle-stroke-width'];
+      }
+
       break;
     default:
       // do nothing
   }
 
-  if (typeData && data) {
-    typeData.paint['line-color'] = data.lineColor || typeData.paint['line-color'];
-    typeData.paint['line-offset'] = data.lineOffset || typeData.paint['line-offset'];
-    typeData.paint['line-width'] = data.lineWidth || typeData.paint['line-width'];
-  }
-
   return typeData;
 };
 
-const Layer = ({children, data, id, type, source, onClick, onMousemove, onMouseleave}) => {
+const Layer = ({children, data, id, type, source, filter, onClick, onMousemove, onMouseleave}) => {
   const {map, mapAttrs} = useContext(MapContext);
 
   useEffect(() => {
@@ -49,19 +72,21 @@ const Layer = ({children, data, id, type, source, onClick, onMousemove, onMousel
   const addOrUpdateLayer = (id, layer, source) => {
     const existingLayer = map.getLayer(id);
     if (existingLayer) {
-      map.setPaintProperty(id, 'line-color', layer.paint['line-color']);
+      if (layer.paint && layer.paint['line-color']) {
+        map.setPaintProperty(id, 'line-color', layer.paint['line-color']);
+      }
     } else {
       map.addLayer(layer);
-
-      if (onClick) {
-        map.on('click', id, onClick);
-      }
 
       const customEventData = {
         sourceId: source,
         map,
         mapAttrs
       };
+
+      if (onClick) {
+        map.on('click', id, (e) => onClick(e, customEventData));
+      }
 
       if (onMousemove) {
         map.on('mousemove', id, (e) => onMousemove(e, customEventData));
@@ -87,6 +112,10 @@ const Layer = ({children, data, id, type, source, onClick, onMousemove, onMousel
       layout: typeData.layout,
       paint: typeData.paint
     };
+
+    if (filter) {
+      layer.filter = ['==', '$type', filter];
+    }
 
     React.Children.forEach(children, (child) => {
       if (child.type === Feature) {

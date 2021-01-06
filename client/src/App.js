@@ -6,8 +6,10 @@ import TrafficMap from './components/traffic/TrafficMap';
 import SubrouteMap from './components/route/SubrouteMap';
 import Dashboard from './components/dashboard/Dashboard';
 import Info from './components/info/Info';
+import PathDetail from './components/path/PathDetail';
 
-import { fetchTraffic, fetchPaths } from './actions/traffic';
+import { fetchTraffic } from './actions/traffic';
+import { fetchPaths, resetPathDetail } from './actions/path';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -18,6 +20,11 @@ const App = () => {
 
   const dispatchFetchPaths = () => {
     return dispatch(fetchPaths());
+  };
+
+  const onDayChanged = async (dateString) => {
+    dispatch(resetPathDetail());
+    await dispatchFetchTraffic(dateString);
   };
 
   useEffect(() => {
@@ -35,8 +42,9 @@ const App = () => {
         <TrafficMap></TrafficMap>
       </Mapbox>
       <Dashboard
-        onDayChanged={dispatchFetchTraffic}
+        onDayChanged={onDayChanged}
       />
+      <PathDetail />
     </div>
   );
 };

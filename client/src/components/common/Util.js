@@ -1,5 +1,7 @@
+import _ from 'lodash';
+
 export const DATE_FORMAT = 'MMM DD, YYYY';
-export const DATETIME_FORMAT = 'MMM DD, YYYY HH:mm';
+export const DATETIME_FORMAT = 'MMM DD, YYYY HH:mm ';
 export const TIME_FORMAT = 'HH:mm';
 export const DAY_FORMAT = 'ddd';
 
@@ -10,7 +12,7 @@ export const TRAFFIC_COLOUR_STEPS = [
   10,
   '#F9874E', // red/high traffic
 ];
-export const TrafficToColour = (score) => {
+export const trafficToColour = (score) => {
   const numSteps = Math.floor(TRAFFIC_COLOUR_STEPS.length / 2);
 
   for (let i = 0; i < numSteps; i++) {
@@ -23,4 +25,46 @@ export const TrafficToColour = (score) => {
   }
 
   return TRAFFIC_COLOUR_STEPS[numSteps * 2];
+};
+
+export const trafficToPreview = (source) => {
+  return (timestamps) => {
+    let max = 0;
+    timestamps.forEach((timestamp) => {
+      const element = source[timestamp];
+      if (!element) {
+        return 0;
+      }
+
+      const sum = _.sumBy(element.data, 'weight');
+      max = Math.max(max, sum);
+    });
+
+    const results = timestamps.map((timestamp) => {
+      const element = source[timestamp];
+      if (!element) {
+        return {
+          x: null,
+          data: {
+            timestamp
+          }
+        }
+      }
+
+      const totalWeight = _.sumBy(element.data, 'weight');
+      const totalScore = _.sumBy(element.data, 'score');
+      const color = trafficToColour(totalScore / totalWeight);
+      const x = totalWeight / max;
+
+      return {
+        x,
+        data: {
+          color,
+          timestamp
+        }
+      };
+    });
+
+    return results;
+  }
 };

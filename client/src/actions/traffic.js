@@ -2,52 +2,13 @@ import _ from 'lodash';
 
 import {
   FETCH_TRAFFIC,
-  FETCH_PATHS,
   UPDATE_TIMELINE,
   REFRESH_TIMELINE,
   SET_TIMELINE_PREVIEW,
-  SET_TIMELINE_DATA_STATUS
+  SET_TIMELINE_DATA_STATUS,
 } from './types';
 import resource from '../resources/traffic';
-import { TrafficToColour } from '../components/common/Util'
-
-const trafficTransformer = (source) => {
-  return (timestamps) => {
-    let max = 0;
-    timestamps.forEach((timestamp) => {
-      const element = source[timestamp];
-      if (!element) {
-        return 0;
-      }
-
-      const sum = _.sumBy(element.data, 'weight');
-      max = Math.max(max, sum);
-    });
-
-    const results = timestamps.map((timestamp) => {
-      const element = source[timestamp];
-      if (!element) {
-        return {
-          x: null
-        }
-      }
-
-      const totalWeight = _.sumBy(element.data, 'weight');
-      const totalScore = _.sumBy(element.data, 'score');
-      const color = TrafficToColour(totalScore / totalWeight);
-      const x = totalWeight / max;
-
-      return {
-        x,
-        data: {
-          color
-        }
-      };
-    });
-
-    return results;
-  }
-};
+import { trafficToPreview } from '../components/common/Util'
 
 const dispatchToTimeline = (dispatch, getState, dateString, trafficResponse) => {
   dispatch({
@@ -74,7 +35,7 @@ const dispatchToTimeline = (dispatch, getState, dateString, trafficResponse) => 
     type: SET_TIMELINE_PREVIEW,
     payload: {
       source: trafficByTimestamp,
-      transform: trafficTransformer
+      transform: trafficToPreview
     }
   });
 };
@@ -94,15 +55,3 @@ export const fetchTraffic = (dateString) => {
     dispatchToTimeline(dispatch, getState, dateString, response);
   }
 };
-
-export const fetchPaths = () => {
-  return async (dispatch) => {
-    const response = await resource.fetchPaths();
-
-    dispatch({
-      type: FETCH_PATHS,
-      payload: response.data
-    });
-  }
-}
-

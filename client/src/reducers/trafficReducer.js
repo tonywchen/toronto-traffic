@@ -1,8 +1,9 @@
-import { FETCH_TRAFFIC, FETCH_PATHS } from '../actions/types';
+import {
+  FETCH_TRAFFIC,
+} from '../actions/types';
 
 const initialState = {
-  trafficByTimestamp: {},
-  paths: []
+  trafficByTimestamp: {}
 };
 
 const trafficReducer = (state = initialState, action) => {
@@ -19,11 +20,6 @@ const trafficReducer = (state = initialState, action) => {
       return {
         ...state,
         trafficByTimestamp
-      };
-    case FETCH_PATHS:
-      return {
-        ...state,
-        paths: action.payload.paths || []
       };
     default:
       return state;

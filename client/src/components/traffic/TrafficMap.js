@@ -1,15 +1,19 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
 import { TRAFFIC_COLOUR_STEPS } from '../common/Util';
 
+import { fetchPathDetail } from '../../actions/path';
+
+const LINE_COLOUR_STEPPED = [
+  'step', ['get', 'average'],
+  ...TRAFFIC_COLOUR_STEPS
+];
+
 const LAYER_DATA = {
-  lineColor: [
-    'step', ['get', 'average'],
-    ...TRAFFIC_COLOUR_STEPS
-  ],
+  lineColor: LINE_COLOUR_STEPPED,
   lineWidth: [
     'interpolate', ['linear'], ['zoom'],
     12, 0.5,
@@ -23,38 +27,72 @@ const HITBOX_LAYER_DATA = {
   lineOffset: 15
 };
 const HIGHLIGHT_LAYER_DATA = {
-  lineColor: [
-    'step', ['get', 'average'],
-    ...TRAFFIC_COLOUR_STEPS
-  ],
+  lineColor: LINE_COLOUR_STEPPED,
   lineWidth: [
     'case',
-    ['boolean', ['feature-state', 'hover'], false],
-    8,
+    ['boolean', ['feature-state', 'hover'], false], 8,
+    ['boolean', ['feature-state', 'focus'], false], 6,
     0
   ],
   lineOffset: 6
+};
+const FOCUS_LAYER_DATA = {
+  lineColor: 'white',
+  lineWidth: [
+    'case',
+    ['boolean', ['feature-state', 'focus'], false], 12,
+    0
+  ],
+  lineOffset: 6
+};
+const HIGHLIGHT_POINT_LAYER_DATA = {
+  circleColor: 'white',
+  circleRadius: [
+    'interpolate', ['linear'], ['zoom'],
+    12, 1,
+    14, 4
+  ],
+  circleStrokeColor: '#171717',
+  circleStrokeWidth: [
+    'interpolate', ['linear'], ['zoom'],
+    12, 1,
+    14, 2
+  ],
 };
 
 const Generate = {
   layerId: (timestamp) => `path-lines-${timestamp}`,
   hitboxLayerId: (timestamp) => `path-hitboxes-${timestamp}`,
   highlightLayerId: (timestamp) => `path-highlights-${timestamp}`,
-  sourceId: (timestamp) => `paths-${timestamp}`,
+  focusLayerId: (timestamp) => `path-focuses-${timestamp}`,
+  pathSourceId: (timestamp) => `paths-${timestamp}`,
+  stopSourceId: (timestamp) => `stops-${timestamp}`,
+  stopHighlightLayerId: (timestamp) => `stop-highlights-${timestamp}`
 };
 
-let numberId = 1;
+let pathNumberId = 1;
 const pathToNumberIdMap = {};
 const getNumberIdFromPath = (from, to) => {
   const identifier = `${from}_${to}`;
-  pathToNumberIdMap[identifier] = pathToNumberIdMap[identifier] || numberId++;
+  pathToNumberIdMap[identifier] = pathToNumberIdMap[identifier] || pathNumberId++;
 
   return pathToNumberIdMap[identifier];
+};
+
+let stopNumberId = 1;
+const stopToNumberIdMap = {};
+const getNumberIdFromStop = (stopId) => {
+  const identifier = `${stopId}`;
+  stopToNumberIdMap[identifier] = stopToNumberIdMap[identifier] || stopNumberId++;
+
+  return stopToNumberIdMap[identifier];
 };
 
 const TrafficMap = () => {
   const trafficByTimestamp = useSelector(store => store.traffic.trafficByTimestamp);
   const selectedTime = useSelector(store => store.timeline.selected);
+
+  const dispatch = useDispatch();
 
   const computeTrafficSnapshots = () => {
     const traffic = trafficByTimestamp[selectedTime];
@@ -65,10 +103,14 @@ const TrafficMap = () => {
 
   const buildTrafficPaths = (snapshots) => {
     if (snapshots.length === 0) {
-      return {};
+      return {
+        pathMap: {},
+        stopMap: {}
+      };
     }
 
     const pathMap = {};
+    const stopMap = {};
     snapshots.forEach((snapshot) => {
       snapshot.data.forEach((datum) => {
         const legs = datum.path.legs;
@@ -86,31 +128,42 @@ const TrafficMap = () => {
         };
 
         const pathId = `${datum.path.from}_${datum.path.to}`;
-        const featureId = getNumberIdFromPath(datum.path.from, datum.path.to); // Mapbox feature id has to be numerical
         pathMap[pathId] = pathMap[pathId] || {
           sourceData,
-          featureId
+          featureId: getNumberIdFromPath(datum.path.from, datum.path.to)
         };
-
         pathMap[pathId].sourceData = {
           ...sourceData,
           timestamp: snapshot.timestamp
         };
+
+        stopMap[datum.path.from] = {
+          coordinates: legs[0],
+          featureId: getNumberIdFromStop(datum.path.from),
+        };
+        stopMap[datum.path.to] = {
+          coordinates: legs[legs.length - 1],
+          featureId: getNumberIdFromStop(datum.path.to),
+        };
       });
     });
 
-    return pathMap;
+    return {
+      pathMap,
+      stopMap
+    };
   };
 
   const renderTrafficPaths = (pathMap) => {
     const layerId = Generate.layerId(selectedTime);
     const hitboxLayerId = Generate.hitboxLayerId(selectedTime);
     const highlightLayerId = Generate.highlightLayerId(selectedTime);
-    const sourceId = Generate.sourceId(selectedTime);
+    const focusLayerId = Generate.focusLayerId(selectedTime);
+    const pathSourceId = Generate.pathSourceId(selectedTime);
 
     return (
       <>
-        <Feature type="FeatureCollection" id={sourceId}>
+        <Feature type="FeatureCollection" id={pathSourceId}>
           {
             Object.keys(pathMap).map((pathId) => {
               const { sourceData, featureId } = pathMap[pathId];
@@ -124,31 +177,74 @@ const TrafficMap = () => {
           type="line"
           data={LAYER_DATA}
           id={layerId}
-          source={sourceId}
+          source={pathSourceId}
           key={layerId}
+          filter="LineString"
+        />
+        <Layer
+          type="line"
+          data={FOCUS_LAYER_DATA}
+          id={focusLayerId}
+          source={pathSourceId}
+          key={focusLayerId}
+          filter="LineString"
         />
         <Layer
           type="line"
           data={HIGHLIGHT_LAYER_DATA}
           id={highlightLayerId}
-          source={sourceId}
+          source={pathSourceId}
           key={highlightLayerId}
+          filter="LineString"
         />
         <Layer
           type="line"
           data={HITBOX_LAYER_DATA}
           id={hitboxLayerId}
-          source={sourceId}
+          source={pathSourceId}
           key={hitboxLayerId}
+          onClick={onPathClicked}
           onMousemove={onPathMousemove}
           onMouseleave={onPathMouseleave}
+          filter="LineString"
         />
       </>
     );
   };
 
-  const onPathClicked = (e) => {
-    console.log(e.features[0].properties);
+  const onPathClicked = (e, data) => {
+    const { map, mapAttrs } = data;
+
+    _unfocusCurrent(map, mapAttrs);
+
+    if (e.features.length > 0) {
+      const sourceId = Generate.pathSourceId(selectedTime);
+      mapAttrs.focusStateId = e.features[0].id;
+
+      map.setFeatureState(
+        { source: sourceId, id: mapAttrs.focusStateId },
+        { focus: true }
+      );
+
+      const { from, to, average } = e.features[0].properties;
+      const onPathSelectionReset = () => {
+        _unfocusCurrent(map, mapAttrs);
+      };
+      dispatch(fetchPathDetail(from, to, average, selectedTime, onPathSelectionReset));
+    }
+  };
+  const _unfocusCurrent = (map, mapAttrs) => {
+    const { focusStateId } = mapAttrs;
+    const sourceId = Generate.pathSourceId(selectedTime);
+
+    if (focusStateId) {
+      map.setFeatureState(
+        { source: sourceId, id: focusStateId },
+        { focus: false }
+      );
+
+      mapAttrs.focusStateId = null;
+    }
   };
 
   const onPathMousemove = (e, data) => {
@@ -158,7 +254,7 @@ const TrafficMap = () => {
     _unhoverCurrent(map, mapAttrs);
 
     if (e.features.length > 0) {
-      const sourceId = Generate.sourceId(selectedTime);
+      const sourceId = Generate.pathSourceId(selectedTime);
       mapAttrs.hoverStateId = e.features[0].id;
 
       map.setFeatureState(
@@ -175,7 +271,7 @@ const TrafficMap = () => {
   };
   const _unhoverCurrent = (map, mapAttrs) => {
     const { hoverStateId } = mapAttrs;
-    const sourceId = Generate.sourceId(selectedTime);
+    const sourceId = Generate.pathSourceId(selectedTime);
 
     if (hoverStateId) {
       map.setFeatureState(
@@ -191,7 +287,7 @@ const TrafficMap = () => {
     return null;
   }
 
-  const pathMap = buildTrafficPaths(computeTrafficSnapshots());
+  const { pathMap } = buildTrafficPaths(computeTrafficSnapshots());
 
   return (
     renderTrafficPaths(pathMap)
