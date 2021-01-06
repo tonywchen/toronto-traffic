@@ -36,10 +36,19 @@ const PathDetail = () => {
   const dispatch = useDispatch();
 
   const render = () => {
-    const hiddenClassName = (selectedPath)? '' : 'hidden';
+    const minimizedClassNames = (selectedPath)? '' : 'left-full -right-full md:left-auto md:-right-full';
 
     return (
-      <div className={`path-detail ${hiddenClassName} fixed z-50 inset-0 w-full md:top-4 md:bottom-64 md:left-auto md:right-4 md:w-1/3 lg:w-1/4 md:max-w-xs bg-gray-900 rounded overflow-hidden`}>
+      <div className={`path-detail fixed z-50
+        ${minimizedClassNames}
+        inset-0
+        md:top-4 md:bottom-64 md:left-auto md:right-4 md:w-1/3
+        lg:w-1/4
+        w-full md:max-w-xs
+        bg-gray-900
+        rounded
+        overflow-hidden
+        transition-all`}>
         { selectedPath && selectedPath.isLoading && renderEmptyState() }
         { selectedPath && !selectedPath.isLoading && renderDetail() }
       </div>
