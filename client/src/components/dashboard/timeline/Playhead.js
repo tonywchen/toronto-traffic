@@ -82,7 +82,6 @@ const Playhead = (props) => {
   };
   const renderSelectedTimeGuide = () => {
     const { style } = computeRenderAttributes(selectedTime);
-    // style.left = `${1 / timestamps.length * 100}%`
 
     return (
       <div className="absolute mt-6 h-4 border-r border-gray-400 border-opacity-100" style={style}>
@@ -95,7 +94,6 @@ const Playhead = (props) => {
     }
 
     const { style } = computeRenderAttributes();
-    // style.left = `${1 / timestamps.length * 100}%`
 
     const borderColorClass = `border-${COLORS[mode]}`;
 
