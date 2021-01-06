@@ -20,7 +20,7 @@ const TICK_INTERVAL = 5; // 5 minutes
 const NUM_OF_TICKS = MAX_TIME_DISPLAYED / TICK_INTERVAL;
 const SPEED = {
   FAST: {
-    value: 250,
+    value: 1000,
     text: '0.5x'
   },
   NORMAL: {
@@ -28,7 +28,7 @@ const SPEED = {
     text: '1x'
   },
   SLOW: {
-    value: 1000,
+    value: 250,
     text: '2x'
   }
 };
