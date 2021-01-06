@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useRef, useEffect, useContext } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import _ from 'lodash';
 
 import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
+
 import { TRAFFIC_COLOUR_STEPS } from '../common/Util';
+import MapContext from '../common/MapContext';
 
 import { fetchPathDetail } from '../../actions/path';
 
@@ -73,7 +76,7 @@ const Generate = {
 let pathNumberId = 1;
 const pathToNumberIdMap = {};
 const getNumberIdFromPath = (from, to) => {
-  const identifier = `${from}_${to}`;
+  const identifier = `${from}--${to}`;
   pathToNumberIdMap[identifier] = pathToNumberIdMap[identifier] || pathNumberId++;
 
   return pathToNumberIdMap[identifier];
@@ -89,10 +92,35 @@ const getNumberIdFromStop = (stopId) => {
 };
 
 const TrafficMap = () => {
+  const {map, mapAttrs} = useContext(MapContext);
+
   const trafficByTimestamp = useSelector(store => store.traffic.trafficByTimestamp);
   const selectedTime = useSelector(store => store.timeline.selected);
 
   const dispatch = useDispatch();
+
+  const focusedPath = useRef([]);
+
+  useEffect(() => {
+    map.on('sourcedata', onMapSourceData);
+  }, [selectedTime])
+
+  const onMapSourceData = (e) => {
+    if (e.isSourceLoaded && map && mapAttrs) {
+      const { from, to } = mapAttrs.focusStateProperties || {};
+      const identifier = `${from}--${to}`;
+      const featureId = pathToNumberIdMap[identifier];
+
+      if (featureId) {
+        map.setFeatureState(
+          { source: e.sourceId, id: mapAttrs.focusStateId },
+          { focus: true }
+        );
+      }
+
+      map.off('sourcedata', onMapSourceData);
+    }
+  };
 
   const computeTrafficSnapshots = () => {
     const traffic = trafficByTimestamp[selectedTime];
@@ -127,7 +155,7 @@ const TrafficMap = () => {
           }
         };
 
-        const pathId = `${datum.path.from}_${datum.path.to}`;
+        const pathId = `${datum.path.from}--${datum.path.to}`;
         pathMap[pathId] = pathMap[pathId] || {
           sourceData,
           featureId: getNumberIdFromPath(datum.path.from, datum.path.to)
@@ -220,6 +248,7 @@ const TrafficMap = () => {
     if (e.features.length > 0) {
       const sourceId = Generate.pathSourceId(selectedTime);
       mapAttrs.focusStateId = e.features[0].id;
+      mapAttrs.focusStateProperties = e.features[0].properties;
 
       map.setFeatureState(
         { source: sourceId, id: mapAttrs.focusStateId },
@@ -227,6 +256,8 @@ const TrafficMap = () => {
       );
 
       const { from, to, average } = e.features[0].properties;
+      focusedPath.current = [from, to];
+
       const onPathSelectionReset = () => {
         _unfocusCurrent(map, mapAttrs);
       };
@@ -244,6 +275,9 @@ const TrafficMap = () => {
       );
 
       mapAttrs.focusStateId = null;
+      mapAttrs.focusStateProperties = null;
+
+      focusedPath.current = [];
     }
   };
 
