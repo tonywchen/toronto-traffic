@@ -226,10 +226,11 @@ const TrafficMap = () => {
         { focus: true }
       );
 
-      console.log(mapAttrs);
-
       const { from, to, average } = e.features[0].properties;
-      dispatch(fetchPathDetail(from, to, average, selectedTime));
+      const onPathSelectionReset = () => {
+        _unfocusCurrent(map, mapAttrs);
+      };
+      dispatch(fetchPathDetail(from, to, average, selectedTime, onPathSelectionReset));
     }
   };
   const _unfocusCurrent = (map, mapAttrs) => {

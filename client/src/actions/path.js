@@ -19,13 +19,14 @@ export const fetchPaths = () => {
   }
 };
 
-export const fetchPathDetail = (from, to, average, selectedTime) => {
+export const fetchPathDetail = (from, to, average, selectedTime, onReset) => {
   return async (dispatch) => {
     dispatch({
       type: FETCH_PATH_DETAIL_INITIALIZED,
       payload: {
         from,
-        to
+        to,
+        onReset
       }
     });
 
@@ -40,14 +41,22 @@ export const fetchPathDetail = (from, to, average, selectedTime) => {
         currentView: {
           average,
           selectedTime
-        }
+        },
+        onReset
       }
     });
   };
 };
 
 export const resetPathDetail = () => {
-  return (dispatch) => {
+  return (dispatch, getState) => {
+    const selectedPath = getState().path.selectedPath || {};
+    const { onReset } = selectedPath;
+
+    if (onReset) {
+      onReset();
+    }
+
     dispatch({
       type: RESET_PATH_DETAIL
     });
