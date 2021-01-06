@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment-timezone';
 
-import { DATETIME_FORMAT, DATE_FORMAT, TIME_FORMAT, trafficToPreview } from '../common/Util';
+import { DATE_FORMAT, TIME_FORMAT, trafficToColour, trafficToPreview } from '../common/Util';
 import { ReactComponent as CloseIcon } from '../icons/close.svg';
 
 import { resetPathDetail } from '../../actions/path';
@@ -35,9 +35,9 @@ const PathDetail = () => {
     const hiddenClassName = (selectedPath)? '' : 'hidden';
 
     return (
-      <div className={`path-detail ${hiddenClassName} absolute z-40 top-4 right-4 bottom-60 w-1/4 max-w-xs bg-black bg-opacity-75 rounded overflow-hidden`}>
-        { selectedPath && selectedPath.loading && renderEmptyState() }
-        { selectedPath && !selectedPath.loading && renderDetail() }
+      <div className={`path-detail ${hiddenClassName} fixed z-50 inset-0 w-full md:top-4 md:bottom-64 md:left-auto md:right-4 md:w-1/3 lg:w-1/4 md:max-w-xs bg-gray-900 rounded overflow-hidden`}>
+        { selectedPath && selectedPath.isLoading && renderEmptyState() }
+        { selectedPath && !selectedPath.isLoading && renderDetail() }
       </div>
     );
   };
@@ -48,7 +48,16 @@ const PathDetail = () => {
 
   const renderEmptyState = () => {
     return (
-      <div>Loading...</div>
+      <div className="w-full h-full relative flex items-center justify-center">
+        <button
+          className="absolute top-2 right-4 right-0 w-10 h-10 -mx-2 p-2 bg-gray-900 text-white rounded-full hover-hover:hover:bg-blue-800"
+          onClick={minimize}>
+          <CloseIcon />
+        </button>
+        <div className="w-3/4 text-white">
+          Loading traffic information between Stops #{ selectedPath.fromStop.tag } and #{ selectedPath.toStop.tag }...
+        </div>
+      </div>
     );
   };
 
@@ -64,18 +73,18 @@ const PathDetail = () => {
 
   const renderHeader = () => {
     return (
-      <div className={`path-detail__section space-y-2 px-4 py-4 border-b border-white border-opacity-10 bg-blue-900`}>
+      <div className={`path-detail__section space-y-2 px-4 py-2 border-b border-white border-opacity-10 bg-blue-900`}>
         <button
           className="float-right w-10 h-10 -mx-2 p-2 bg-blue-900 text-white rounded-full hover-hover:hover:bg-blue-800"
           onClick={minimize}>
           <CloseIcon />
         </button>
         <div>
-          <div className="text-xs text-white text-opacity-50">From</div>
+          <div className="text-xs text-white text-opacity-50">From Stop #{ selectedPath.fromStop.tag }</div>
           <div className="flex-grow text-sm font-bold text-white">{ selectedPath.fromStop && selectedPath.fromStop.title }</div>
         </div>
         <div>
-          <div className="text-xs text-white text-opacity-50">To</div>
+        <div className="text-xs text-white text-opacity-50">To Stop #{ selectedPath.toStop.tag }</div>
           <div className="flex-grow text-sm font-bold text-white">{ selectedPath.toStop && selectedPath.toStop.title }</div>
         </div>
       </div>
@@ -120,7 +129,7 @@ const PathDetail = () => {
             </div>
             <div className="text-sm text-white">
               <span>Between these two stops, the traffic is</span>&nbsp;
-              <span className="font-bold">
+              <span className="font-bold" style={{color: trafficToColour(selectedPath.currentView.average)}}>
                 { getTrafficStatusText(selectedPath.currentView.average) }
               </span>&nbsp;
               <span>predicted at { moment(selectedPath.currentView.selectedTime).format(TIME_FORMAT) }.</span>
@@ -141,7 +150,7 @@ const PathDetail = () => {
             </div>
             <div className="text-sm text-white">
               <span>Thoughout the day, the traffic is on average</span>&nbsp;
-              <span className="font-bold">
+              <span className="font-bold" style={{color: trafficToColour(dailyAverage)}}>
                 { getTrafficStatusText(dailyAverage) }
               </span>&nbsp;
               <span>predicted.</span>
@@ -169,7 +178,7 @@ const PathDetail = () => {
         { selectedPath.trend && !isNaN(selectedPath.trend.average) && (
           <div className="text-sm text-white">
             <span>The traffic between these two stops is on average</span>&nbsp;
-            <span className="font-bold">
+            <span className="font-bold" style={{color: trafficToColour(selectedPath.trend.average)}}>
               { getTrafficStatusText(selectedPath.trend.average) }
             </span>&nbsp;
             <span>predicted in the past month.</span>
