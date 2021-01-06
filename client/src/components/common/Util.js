@@ -44,7 +44,10 @@ export const trafficToPreview = (source) => {
       const element = source[timestamp];
       if (!element) {
         return {
-          x: null
+          x: null,
+          data: {
+            timestamp
+          }
         }
       }
 
@@ -56,7 +59,8 @@ export const trafficToPreview = (source) => {
       return {
         x,
         data: {
-          color
+          color,
+          timestamp
         }
       };
     });

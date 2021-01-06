@@ -154,8 +154,8 @@ const PathDetail = () => {
               </span>&nbsp;
               <span>predicted on this day</span>
             </div>
-            <div className={`h-8 relative w-full py-2 border-b border-white border-opacity-25`}>
-              <Preview preview={dailyPreview} />
+            <div className={`h-12 py-2 mx-2 relative`}>
+              <Preview preview={dailyPreview} showTime={3} />
             </div>
           </>
         )}
