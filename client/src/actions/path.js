@@ -19,13 +19,14 @@ export const fetchPaths = () => {
   }
 };
 
-export const fetchPathDetail = (from, to, average, selectedTime, onReset) => {
+export const fetchPathDetail = (from, to, average, selectedTime, legs, onReset) => {
   return async (dispatch) => {
     dispatch({
       type: FETCH_PATH_DETAIL_INITIALIZED,
       payload: {
         from,
         to,
+        legs,
         onReset
       }
     });
@@ -42,6 +43,7 @@ export const fetchPathDetail = (from, to, average, selectedTime, onReset) => {
           average,
           selectedTime
         },
+        legs,
         onReset
       }
     });

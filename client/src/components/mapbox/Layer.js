@@ -78,24 +78,21 @@ const Layer = ({children, data, id, type, source, filter, onClick, onMousemove, 
     } else {
       map.addLayer(layer);
 
-      const customEventData = {
-        sourceId: source,
-        map,
-        mapAttrs
-      };
+      attachLayerEventListeners();
+    }
+  };
 
-      if (onClick) {
-        map.on('click', id, (e) => onClick(e, customEventData));
-      }
+  const attachLayerEventListeners = () => {
+    if (onClick) {
+      map.on('click', id, onClick);
+    }
 
-      if (onMousemove) {
-        map.on('mousemove', id, (e) => onMousemove(e, customEventData));
-      }
+    if (onMousemove) {
+      map.on('mousemove', id, onMousemove);
+    }
 
-      if (onMouseleave) {
-        map.on('mouseleave', id, (e) => onMouseleave(e, customEventData));
-      }
-
+    if (onMouseleave) {
+      map.on('mouseleave', id, onMouseleave);
     }
   };
 
