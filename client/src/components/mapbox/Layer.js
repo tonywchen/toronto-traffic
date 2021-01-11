@@ -78,11 +78,11 @@ const Layer = ({children, data, id, type, source, filter, onClick, onMousemove, 
     } else {
       map.addLayer(layer);
 
-      attachLayerEventListeners(source);
+      attachLayerEventListeners();
     }
   };
 
-  const attachLayerEventListeners = (source) => {
+  const attachLayerEventListeners = () => {
     if (onClick) {
       map.on('click', id, onClick);
     }

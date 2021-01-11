@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 
-import MapContext from '../common/MapContext';
 import Layer from '../mapbox/Layer';
 import Feature from '../mapbox/Feature';
 
@@ -42,8 +41,6 @@ const SelectedPathMap = () => {
   const selectedPathSourceId = `selected-path`;
   const selectedLayerId = `selected-path`;
   const selectedBaseLayerId = `selected-path-base`;
-
-  console.log(sourceData);
 
   return (
     <>

@@ -15,7 +15,6 @@ import {
   GenerateId,
   createNumberIdFromPath,
   createNumberIdFromStop,
-  getNumberIdFromPath
 } from './TrafficMapUtil';
 
 const TrafficMap = () => {

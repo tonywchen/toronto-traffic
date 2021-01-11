@@ -65,14 +65,8 @@ export const GenerateId = {
 let pathNumberId = 1;
 const pathToNumberIdMap = {};
 export const createNumberIdFromPath = (from, to) => {
-  const result = getNumberIdFromPath(from, to);
-  pathNumberId++;
-
-  return result;
-};
-export const getNumberIdFromPath = (from, to) => {
   const identifier = `${from}--${to}`;
-  pathToNumberIdMap[identifier] = pathToNumberIdMap[identifier] || pathNumberId;
+  pathToNumberIdMap[identifier] = pathToNumberIdMap[identifier] || pathNumberId++;
 
   return pathToNumberIdMap[identifier];
 };
