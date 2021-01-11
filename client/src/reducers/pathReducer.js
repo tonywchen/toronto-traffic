@@ -18,14 +18,15 @@ const pathReducer = (state = initialState, action) => {
         paths: action.payload.paths || []
       };
     case FETCH_PATH_DETAIL_INITIALIZED:
-      const { from, to } = action.payload;
+      const { from, to, legs } = action.payload;
 
       return {
         ...state,
         selectedPath: {
           isLoading: true,
           fromStop: { tag: from },
-          toStop: { tag: to }
+          toStop: { tag: to },
+          legs
         }
       };
     case FETCH_PATH_DETAIL:

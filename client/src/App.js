@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 
 import Mapbox from './components/mapbox/Mapbox';
 import TrafficMap from './components/traffic/TrafficMap';
+import SelectedPathMap from './components/traffic/SelectedPathMap';
 import SubrouteMap from './components/route/SubrouteMap';
 import Dashboard from './components/dashboard/Dashboard';
 import Info from './components/info/Info';
@@ -39,6 +40,7 @@ const App = () => {
       <Info />
       <Mapbox>
         <SubrouteMap></SubrouteMap>
+        <SelectedPathMap></SelectedPathMap>
         <TrafficMap></TrafficMap>
       </Mapbox>
       <Dashboard
