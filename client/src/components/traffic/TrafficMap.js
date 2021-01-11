@@ -188,8 +188,6 @@ const TrafficMap = () => {
         { select: true }
       );
 
-      console.log('onPathClicked', sourceId, mapAttrs.selectData.featureId);
-
       const onPathSelectionReset = () => {
         unselectCurrent(map, mapAttrs);
       };
