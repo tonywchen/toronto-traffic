@@ -40,7 +40,7 @@ const TrafficMap = () => {
           { select: true }
         );
 
-        mapAttrs.selectSourceId = e.sourceId;
+        mapAttrs.selectData.sourceId = e.sourceId;
       }
 
       map.off('sourcedata', onMapSourceData);
@@ -188,6 +188,8 @@ const TrafficMap = () => {
         { select: true }
       );
 
+      console.log('onPathClicked', sourceId, mapAttrs.selectData.featureId);
+
       const onPathSelectionReset = () => {
         unselectCurrent(map, mapAttrs);
       };
@@ -207,6 +209,7 @@ const TrafficMap = () => {
     if (e.features.length > 0) {
       const sourceId = GenerateId.pathSourceId(selectedTime);
       mapAttrs.hoverData = {
+        sourceId,
         featureId: e.features[0].id
       };
 
@@ -237,11 +240,10 @@ const TrafficMap = () => {
     }
   };
   const unhoverCurrent = (map, mapAttrs) => {
-    const sourceId = GenerateId.pathSourceId(selectedTime);
     const hoverData = mapAttrs.hoverData || {};
-    const { featureId } = hoverData;
+    const { featureId, sourceId } = hoverData;
 
-    if (featureId) {
+    if (featureId && sourceId) {
       map.setFeatureState(
         { source: sourceId, id: featureId },
         { hover: false }
